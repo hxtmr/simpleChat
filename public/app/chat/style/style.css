@@ -1,0 +1,411 @@
+/* Fix user-agent */
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    font-weight: 300;
+    -webkit-font-smoothing: antialiased;
+}
+
+html, input {
+    font-family:
+    "HelveticaNeue-Light",
+    "Helvetica Neue Light",
+    "Helvetica Neue",
+    Helvetica,
+    Arial,
+    "Lucida Grande",
+    sans-serif;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family:
+    "HelveticaNeue-Light",
+    "Helvetica Neue Light",
+    "Helvetica Neue",
+    Helvetica,
+    Arial,
+    "Lucida Grande",
+    sans-serif;
+    overflow: hidden;
+}
+
+ul {
+    list-style: none;
+    word-wrap: break-word;
+}
+
+/* Pages */
+
+
+.page {
+    height: 100%;
+    position: absolute;
+    width: 100%;
+}
+
+.page {
+    height: 100%;
+    position: absolute;
+    width: 100%;
+}
+
+/* Login Page */
+
+.login.page {
+    background-color: #000;
+}
+
+.login.page .form {
+    height: 100px;
+    margin-top: -200px;
+    position: absolute;
+
+    text-align: center;
+    top: 50%;
+    width: 100%;
+}
+
+.login.page .form .usernameInput {
+    background-color: transparent;
+    border: 2px solid #fff;
+    outline: none;
+    text-align: center;
+    width: 400px;
+}
+
+.login.page .title {
+    font-size: 200%;
+}
+
+.login.page .usernameInput {
+    font-size: 200%;
+    letter-spacing: 3px;
+}
+
+.login.page .title, .login.page .usernameInput {
+    color: #fff;
+    font-weight: 100;
+}
+
+/* Chat page */
+
+.chat.page {
+    display: none;
+}
+
+/* Font */
+
+.messages {
+    font-size: 150%;
+}
+
+.inputMessage {
+    font-size: 100%;
+}
+
+.log {
+    color: gray;
+    font-size: 70%;
+    margin: 5px;
+    text-align: center;
+}
+
+/* Messages */
+
+.chatArea {
+    height: 100%;
+    padding-bottom: 60px;
+    margin-right:-1px;
+}
+
+.messages {
+    height: 100%;
+    margin: 0;
+    overflow-y: scroll;
+    padding: 10px 20px 10px 20px;
+}
+
+.message.typing .messageBody {
+    color: gray;
+}
+
+.username {
+    /* float: left;*/
+    font-weight: bold;
+    overflow: hidden;
+    padding-right: 15px;
+    text-align: right;
+}
+
+/* Input */
+
+.inputMessage {
+    border-top: 10px solid #000;
+    border-left: 214px solid #000;
+    border-right: 9px solid #000;
+    border-bottom: 10px solid #000;
+    bottom: 0;
+    height: 60px;
+    outline: none;
+    padding-left: 10px;
+    position: absolute;
+    right: 205px;
+    width: 100%;
+    display:none;
+}
+
+/*videoArea*/
+.video-area {
+    position:fixed;
+    display: none;
+    right: -667px;
+    bottom: 60px;
+    z-index: 1;
+    width: 667px;
+    height:500px;
+    color: #6b6b6b;
+    background-color: red;
+    font: normal 12px/1.5 Arial, Helvetica, Tahoma, "宋体", sans-serif;
+
+    /*filter:alpha(opacity=50);
+    -moz-opacity:0.5;*/
+   /* opacity:0.5;*/
+}
+.video-area .local_video {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 160px;
+    height: 120px;
+    background: #333333;
+}
+.video-area .remote_video {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height:100%;
+    background: #999999;
+}
+.video-area .controller{
+    float: left;
+    top: 460px;
+    position: absolute;
+    filter:alpha(opacity=1);
+    -moz-opacity:1;
+    opacity:1;
+    width:100%;
+    height:30px;
+    line-height: 30px;
+    text-align: center;
+    z-index: 10;
+}
+.video-area .controller .controlbuttons{
+    display:none;
+    filter:alpha(opacity=50);
+    -moz-opacity:0.5;
+    opacity:0.5;
+    width:170px;
+    text-align: center;
+}
+.video-area .controller .controlbuttons button{
+    border-radius: 15px;
+}
+.video-area .switch-button-on  {
+    float: left;
+    top: 230px;
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-left: 6px solid #0000ff;
+
+/*    width: 0;
+    height: 0;
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-right:6px solid blue;*/
+
+
+    cursor: pointer;
+    -webkit-transition-duration: 300ms;
+    -moz-transition-duration: 300ms;
+
+}
+
+.video-area .switch-button-off  {
+    float: left;
+    top: 230px;
+    left:-6px;
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-right:6px solid #0000ff;
+    cursor: pointer;
+    -webkit-transition-duration: 300ms;
+    -moz-transition-duration: 300ms;
+
+}
+
+.video-area .switch-button-off:hover{
+    border-right: 6px solid #107aff;
+}
+.video-area .switch-button-on:hover{
+    border-left:6px solid #107aff;
+}
+
+.private-container{
+    height: 100%;
+    padding-top: 50px;
+    margin-top: -50px;
+}
+
+.private-container .private-messagesEl{
+ /*   margin-right:-1px;*/
+    height: 100%;
+}
+.private-container .private-messagesEl .private-messages{
+    height: 100%;
+    margin: 0;
+    padding: 10px 20px 10px 20px;
+}
+.private-container .private-inputEl{
+    width:100%;
+    heigth:100%;
+    bottom: 0px;
+}
+.private-container .private-input{
+    border:0px;
+    border-top:2px solid #444444;
+    width:100%;
+    height:50px;
+}
+
+@-webkit-keyframes twinkling{	/*透明度由0到1*/
+    0%{
+        opacity:0.3;				/*透明度为0*/
+    }
+    100%{
+        opacity:1;				/*透明度为1*/
+    }
+}
+.new-private-message{-webkit-animation: twinkling 1s infinite ease-in-out;}
+.profile-container{
+    height: 100%;
+    padding: 50px;
+}
+
+
+:-webkit-full-screen {
+    width: 100%;
+    height: 100%;
+    bottom:0px;
+    left:0px;
+    top:0px;
+}
+
+:-moz-full-screen {
+    width: 100%;
+    height: 100%;
+    bottom:0px;
+    left:0px;
+    top:0px;
+}
+
+:-ms-fullscreen {
+    width: 100%;
+    height: 100%;
+    bottom:0px;
+    left:0px;
+    top:0px;
+}
+
+:full-screen { /*pre-spec */
+    width: 100%;
+    height: 100%;
+    bottom:0px;
+    left:0px;
+    top:0px;
+}
+
+:fullscreen { /* spec */
+    width: 100%;
+    height: 100%;
+    bottom:0px;
+    left:0px;
+    top:0px;
+}
+
+/* deeper elements */
+
+:-webkit-full-screen .switch-button-on {
+    display:none;
+}
+:-moz-full-screen  .switch-button-on {
+    display:none;
+}
+
+:-ms-fullscreen  .switch-button-on {
+    display:none;
+}
+
+:-webkit-full-screen .controller {
+    top:auto;
+    bottom: 50px;
+}
+:-moz-full-screen  .controller {
+    top:auto;
+    bottom: 50px;
+}
+
+:-ms-fullscreen  .controller {
+    top:auto;
+    bottom: 50px;
+}
+
+
+
+:-webkit-full-screen .local_video {
+    top:auto;
+    bottom: 50px;
+    position: absolute;
+    left: 9%;
+    width: 280px;
+    height: 210px;
+}
+:-moz-full-screen  .local_video {
+    top:auto;
+    left: 9%;
+    width: 280px;
+    height: 210px;
+}
+
+:-ms-fullscreen  .local_video {
+    top:auto;
+    left: 9%;
+    width: 280px;
+    height: 210px;
+}
+
+/* styling the backdrop*//*
+
+::backdrop {
+    */
+/* properties *//*
+
+}
+::-ms-backdrop {
+    */
+/* properties *//*
+
+}
+*/

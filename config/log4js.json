@@ -1,0 +1,15 @@
+{
+  "appenders": [{
+    "type": "dateFile",
+    "filename": "logs/simpleChat.log",
+    "pattern": "-yyyy-MM-dd",
+    "maxLogSize": 1048576,
+    "backups": 5,
+    "alwaysIncludePattern": true
+  }, {
+    "type": "console",
+    "layout": {
+      "type": "basic"
+    }
+  }]
+}

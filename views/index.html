@@ -1,0 +1,100 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title><%=title%></title>
+    <link rel="stylesheet" href="/app/chat/style/style.css">
+    <link rel="stylesheet" href="../lib/css/jquery.windows-engine.css">
+    <link rel="stylesheet" href="../lib/css/jquery.slidebox.css">
+    <style type="text/css">
+        body { font-family:Verdana; font-size:14px; margin:0;}
+        .container {margin:0 auto; width:100%;z-index:-1;display:none;}
+        .sidebar { float:right; width:200px; height:100%; background:#9c6;padding-bottom:6px;}
+        .content { margin-right:205px !important; margin-right:202px;height:100%; background:#ffa;}
+        .sidebar .userlist-container{margin-left:3px;margin-top:2px;width: 100%; height:100%; background-color:#9c6}
+        .sidebar .userlist-container .userlist{padding:2px;margin-right:8px;margin-top:2px;margin-bottom:2px;margin-left:3px;width: 100%; height:100%; background-color:#d8d8d8}
+        .sidebar .userlist-container .user{
+            padding-left:5px;margin:2px;width: 180px; height:20px;
+            background:#8e9082;
+            background: -webkit-gradient(linear, 0 0, 0 0%, from(#8e9082), to(#9FA09F));
+            background: -moz-linear-gradient(center top, #8e9082, #9FA09F);
+            border: 1px solid #898b7c;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="login page">
+    <div class="form" style="color:white">
+        <h3 class="title">登录</h3>
+        <table align="center"  style="color:white">
+            <tr><td align="right">用户名： </td><td><input id="username" class="usernameInput" type="text" maxlength="14" /></td></tr>
+            <tr><td align="right">密&nbsp;&nbsp;&nbsp;码：</td><td><input id="password"  class="usernameInput" type="password" maxlength="14" /></td></tr>
+        </table>
+    </div>
+</div>
+
+<div class="container">
+    <div class="sidebar"><div class="userlist-container"><ul class="userlist"></ul></div></div>
+    <div class="content">
+        <div class="chatArea">
+            <ul class="messages"></ul>
+        </div>
+        <input class="inputMessage" placeholder="Type here..."/>
+    </div>
+</div>
+<div class="video-area">
+    <video id="remoteVideo" class="remote_video"></video>
+    <video id="localVideo" class="local_video"></video>
+    <span class="switch-button-off"></span>
+    <div class="controller">
+        <span class="controlbuttons">
+            <button id="hangup">挂断</button>
+            <button id="fullscreen">全屏</button>
+            <button id="swapview">切换视图</button>
+        </span>
+    </div>
+</div>
+<div class="slidebox">
+    <div class="slidebox-content">
+        <a href="#" class="slidebox-close">X</a>
+        <div class="slidebox-title">This will be the title</div>
+        <p class="slidebox-desc">
+            Here you can write some description and other stuff like images, hyperlinks, and any html element.
+        </p>
+    </div>
+</div>
+<script type="text/javascript" src="../lib/jquery.min.js"></script>
+<script type="text/javascript" src="../lib/jquery.slimscroll.min.js"></script>
+<script type="text/javascript" src="../lib/jquery.windows-engine.js"></script>
+<script type="text/javascript" src="../lib/jquery.slidebox.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<!--<script type="text/javascript" src="../app/chat/js/rtc.js"></script>-->
+<script type="text/javascript" src="../app/chat/js/main.js"></script>
+<script type="text/javascript">
+
+    $(document).ready(function(){
+        var $messages = $('.messages');
+        var $userList = $('.userlist');
+        $messages.slimScroll({
+            size:8,
+            color: '#555',
+            height: '100%',
+            alwaysVisible: true,
+            railVisible: false
+        });
+        $userList.slimScroll({
+            size:8,
+            color: '#555',
+            height: '100%',
+            alwaysVisible: true,
+            railVisible: false
+        });
+    });
+    /*    $(".slidebox").slidebox({
+     pagePercentage: 0.9 //the percentage of the page that needs to be scrolled to show the slidebox
+     });*/
+    //]]>
+</script>
+</body>
+</html>

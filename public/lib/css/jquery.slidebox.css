@@ -1,0 +1,32 @@
+.slidebox {
+    position: fixed;
+    width: 400px;
+    right: -430px;
+    bottom: 0;
+    border-top: 2px solid #000;
+    border-left: 2px solid #000;
+    background-color: #fff;
+    z-index: 10;
+}
+
+.slidebox-content {
+    padding: 15px;
+}
+
+.slidebox-close {
+    float: right;
+    color: #777;
+    font-family: courier;
+    text-decoration: none;
+    border: 1px solid #777;
+    padding: 0 2px 0 2px;
+}
+
+.slidebox-title {
+    font-size: x-large;
+    font-weight: bold;
+    padding-bottom: 10px;
+}
+
+.slidebox-desc {
+}

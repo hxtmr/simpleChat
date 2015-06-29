@@ -1,0 +1,139 @@
+.modal-background
+{
+    position:fixed;
+    left:0;
+    top:0;
+    width:100%;
+    height:100%;
+    background-color:#777;
+    -moz-opacity:.50; 
+    filter:alpha(opacity=50); 
+    opacity:.50;
+}
+
+.window-container
+{
+	width:350px;
+	position:absolute;
+	left:350;
+	top:200;
+	font-size:13px;
+	font-family:verdana;
+}
+
+.window-titleBar
+{
+    height:23px;
+    margin:0 9px 0 9px;
+    text-align:center;
+    background-color: #444444;
+}
+
+.window-titleBar-content
+{
+    height:23px;
+    text-align:center;
+    padding-top:3px;
+    color:white;
+    /*background: transparent url(default/top_mid.gif) repeat-x;*/
+	cursor: move;
+}
+
+.window-titleBar-leftCorner
+{
+	/*background: transparent url(default/top_left.gif) no-repeat;			*/
+    background-color: #444444;
+    width:9px;
+    height:23px;
+    position: absolute;
+	left: 0px;
+	top: 0px;
+}
+
+.window-titleBar-rightCorner
+{
+	/*background: transparent url(default/top_right.gif) no-repeat;*/
+    background-color: #444444;
+    width:9px;
+    height:23px;
+    position: absolute;
+	right: 0px;
+	top: 0px;
+}
+
+.window-minimizeButton
+{
+    left: 35px;
+    top: 10px;
+    background-color: white;
+    height: 0px;
+    width: 11px;
+    cursor: pointer;
+    border: 2px ridge white;
+    position: absolute;
+
+
+}
+/*.window-minimizeButton:after { content:'.'; display:block; width:12px; height:2px; background:#f00;-webkit-transform: rotate(-90deg);}*/
+.window-maximizeButton
+{
+    left: 55px;
+    top: 5px;
+    background-color: #444444;
+    height: 12px;
+    width: 12px;
+    cursor: pointer;
+    position: absolute;
+    border:2 ridge white;
+}
+
+.window-closeButton
+{
+    width: 12px;
+    height: 2px;
+    position: absolute;
+    left: 15px;
+    top: 10px;
+    cursor: pointer;
+    background:white; font-size:0; line-height:0;vertical-align:middle;-webkit-transform: rotate(45deg);
+}
+.window-closeButton:after { content:'.'; display:block; width:12px; height:2px; background:white;-webkit-transform: rotate(-90deg);}
+
+.window-content
+{
+	height:100%;
+	background-color:#FFFFFF;
+	font-size:13px;
+	font-family:verdana;
+	color:#000000;
+    border-left:1px solid #AAA;
+    border-right:1px solid #AAA;
+    overflow:auto;
+}
+
+
+.window-statusBar
+{
+	height:19px;
+    position: relative;
+    border-left:1px solid #bbb;
+	overflow: hidden;
+    border-top:1px solid #bbb;
+  /*  background: transparent url(default/bottom_mid.gif) repeat-x;*/
+    background-color: #aaa;
+
+}
+
+.window-resizeIcon
+{
+  /*  background: transparent url(default/sizer.gif) no-repeat;*/
+	position: absolute;
+	right: 0px;
+	bottom: 0px;
+	cursor: se-resize;
+
+    width: 0;
+    height: 0;
+    border-bottom: 9px solid red;
+    border-left: 9px solid transparent;
+}
