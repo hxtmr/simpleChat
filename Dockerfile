@@ -1,21 +1,28 @@
-FROM ubuntu:14.04
-MAINTAINER gggzs (njuptgggzs@163.com)
+# Set the base image to Ubuntu
+FROM    ubuntu
 
+# File Author / Maintainer
+MAINTAINER Anand Mani Sankar
+
+# Update the repository
 RUN apt-get update
 
-#install sshd
-RUN apt-get install -y openssh-server
-RUN mkdir -p /var/run/sshd
-RUN mkdir -p /root/.ssh
+# Install Node.js and other dependencies
+RUN apt-get -y install curl
+RUN curl -sL https://deb.nodesource.com/setup | sudo bash -
+RUN apt-get -y install python build-essential nodejs
 
-#add root's password
-RUN echo "root:111111"|chpasswd
-RUN sed -i 's/without-password/yes/' /etc/ssh/sshd_config
+# Install nodemon
+RUN npm install -g nodemon
 
-#add scripts
-ADD run.sh /run.sh
-RUN chmod 755 /run.sh
+# Bundle app source
+COPY . /src
 
-EXPOSE 22
+# Install app dependencies
+RUN cd /src; npm install
 
-CMD ["/run.sh"]
+# Expose port
+EXPOSE  3300
+
+# Run app using nodemon
+CMD ["nodemon", "/src/app.js"]
