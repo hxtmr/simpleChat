@@ -30,7 +30,6 @@ $(function () {
     var stun_server =  {
         "iceServers": [
             {"url": "stun:stun.voiparound.com"},
-            {"url": "stun:stun.l.google.com:19302"},
             {"url": "stun:stun.sipgate.net"},
             {"url": "stun:217.10.68.152"},
             {"url": "stun:stun.sipgate.net:10000"},
