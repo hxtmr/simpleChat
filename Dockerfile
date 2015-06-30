@@ -1,4 +1,3 @@
-
 # Set the base image to Ubuntu
 FROM    ubuntu
 
@@ -24,7 +23,7 @@ RUN cd /src; npm install
 
 # Expose port
 EXPOSE  22
-
+EXPOSE  80
 # Run app using nodemon
 CMD ["nodemon", "/src/app.js"]
 
