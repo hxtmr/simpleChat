@@ -1,5 +1,5 @@
-FROM ubuntu:14.04
-MAINTAINER gggzs (njuptgggzs@163.com)
+FROM ubuntu
+MAINTAINER Ma Xianbin (624826172@qq.com)
 
 RUN apt-get update
 
