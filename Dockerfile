@@ -26,5 +26,5 @@ RUN cd /src; npm install
 EXPOSE  3300
 
 # Run app using nodemon
-CMD ["nodemon", ¡°/src/app.js"]
+CMD ["nodemon", "/src/app.js"]
 
