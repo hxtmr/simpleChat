@@ -1,5 +1,5 @@
 module.exports = {
-    host: '',
+    host: schat.daoapp.io,
     port: 80
     /*db: {
         user: "lancet-ane",
