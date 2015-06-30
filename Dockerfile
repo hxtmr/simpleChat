@@ -23,7 +23,7 @@ COPY . /src
 RUN cd /src; npm install
 
 # Expose port
-EXPOSE  3300
+EXPOSE  22
 
 # Run app using nodemon
 CMD ["nodemon", "/src/app.js"]

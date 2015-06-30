@@ -1,6 +1,6 @@
 module.exports = {
     host: '',
-    port: 3300
+    port: 80
     /*db: {
         user: "lancet-ane",
         pass: "lancet-ane@dfsoft",
