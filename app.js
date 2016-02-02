@@ -1,24 +1,8 @@
-var fs = require('fs');
-
-//logs 文件夹不存在则创建
-var hasLogForder = fs.existsSync(__dirname + '/logs');
-if (!hasLogForder) {
-    fs.mkdirSync(__dirname + '/logs');
-}
-
-var log4js = require('log4js');
-log4js.configure(__dirname + '/config/log4js.json', {
-    cwd: __dirname
-});
-
-var logger = require('morgan');
 
 process.on('uncaughtException', function(err) {
     console.log('uncaughtException：' + err.stack);
-    log.error('uncaughtException：', err.stack);
 });
 
-var log = log4js.getLogger('simpleChat');
 
 var http = require('http');
 var express = require('express');
@@ -31,107 +15,20 @@ var bodyParser = require('body-parser');//-
 var routes = require('./routes/index');
 var users = require('./routes/users');
 var domain = require('domain');
-var domainMiddleware = require('./lib/domain-middleware');
-
-//var launcher = require('./models/socketio/launcher');
-//var helper = require('./models/cache/helper-code');
 
 var config = require('./config/simpleChat-config');
 uuid = require('./lib/uuid');
 var app = express();
 
-
-
 // general variables
 var webrtc_clients = [];
 var webrtc_discussions = {};
 
-
-/**
- * response增加通用的返回方法
- * @param err 错误信息
- * @param data 返回的数据
- * @param info 操作提示信息（不想前台提示的话，则不传递info），若后台报错的话，传递info参数值无效
- */
-app.response.sendResult = function(err, data, info) {
-    if (data) {
-        if (err) {
-            var jsonObj = {
-                errors: err.stack
-            };
-            if (info) jsonObj.info = info;
-            this.json(500, jsonObj);
-        } else {
-            var jsonObj = {
-                success: true,
-                data: data
-            };
-            if (info) jsonObj.info = info;
-            this.json(jsonObj);
-        }
-    } else {
-        if (err instanceof Error) {
-            var jsonObj = {
-                errors: err.stack
-            };
-            if (info) jsonObj.info = info;
-            this.json(500, jsonObj);
-        } else {
-            var jsonObj = {
-                success: true,
-                data: err
-            };
-            if (info) jsonObj.info = info;
-            this.json(jsonObj);
-        }
-    }
-};
-//response增加通用分页的返回方法
-app.response.sendPageResult = function(err, data) {
-
-    if (data) {
-        if (err) {
-            this.json(500, {
-                errors: err.stack
-            });
-        } else {
-            this.json({
-                success: true,
-                data: data.result,
-                start: data.start,
-                limit: data.limit,
-                totalCount: data.totalCount
-            });
-        }
-    } else {
-        if (err instanceof Error) {
-            this.json(500, {
-                errors: err.stack
-            });
-        } else {
-            this.json({
-                success: true,
-                data: err.result,
-                start: err.start,
-                limit: err.limit,
-                totalCount: err.totalCount
-            });
-        }
-    }
-};
-
-
-if (!config.host || config.host == '') {
-    config.host = '0.0.0.0';
-}
 // all environments
 var server = http.createServer(app);
 var io;
-/*app.use(domainMiddleware({
- server: server,
- killTimeout: -1 //-1不退出
- }));*/
-app.set('port', config.port || 2014);
+
+app.set('port', config.port || 8080);
 app.set('host', config.host);
 //gzip支持
 //app.use(express.compress());
@@ -139,9 +36,6 @@ app.set('views', __dirname + '/views');
 app.engine('.html', ejs.__express);
 app.set('view engine', 'html');
 
-// uncomment after placing your favicon in /public
-//app.use(favicon(__dirname + '/public/favicon.ico'));
-/*app.use(logger('dev'));*/
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -149,18 +43,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', routes);
 app.use('/users', users);
 
-// log (development only)
-// app.use(express.logger('dev'));
-//app.use(express.bodyParser());
-//app.use(express.methodOverride());
-//app.use(express.cookieParser('mdsbthl'));
-//app.use(express.session());
-//app.use(app.router);
-//路由定义
-//routes(app);
-//License validation
-//var License = require('./lib/license.js');
-//new License(__dirname + '/lancet-anesthesia.key').validate();
 
 // assume "not found" in the error msgs
 // is a 404. this is somewhat silly, but
@@ -174,8 +56,6 @@ app.use(function(err, req, res, next) {
         sucess: false,
         errors: err.message
     });
-    // error page
-    // res.status(500).render('500');
 });
 
 // assume 404 since no middleware responded
@@ -189,11 +69,7 @@ io = require('socket.io')(server);
 // web socket functions
 
 server.listen(app.get('port'), app.get('host'), function(req, rsp) {
-    log.info('服务端启动成功, http://%s:%d', app.get('host'), app.get('port'));
-    //start socket.io service.
-    //exports.socketIO = new launcher(server);
-    //加载汉字助词码字典表
-    //helper.load();
+    console.log('服务端启动成功, http://%s:%d', app.get('host'), app.get('port'));
 });
 
 // usernames which are currently connected to the chat
