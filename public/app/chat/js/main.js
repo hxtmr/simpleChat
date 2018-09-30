@@ -1104,10 +1104,10 @@ $(function () {
             var username='访客'+gid(4,16),password='1'
             $('#username').val(username)
             $('#password').val(password)
-            $('.form').append('<div class="">生成的访客ID：'+username+' ，3秒后自动加入。</div>')
-            setTimeout(function(){
+           // setTimeout(function(){
+                alert('生成的访客ID：'+username)
                 setUsername()
-            },3000)
+           //},3000)
         })
     }
 });
