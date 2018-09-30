@@ -1,3 +1,19 @@
+function IsPC() {
+    var userAgentInfo = navigator.userAgent;
+    var Agents = ["Android", "iPhone",
+        "SymbianOS", "Windows Phone",
+        "iPad", "iPod",'Mobile','QQBrowser'];
+    var flag = true;
+    for (var v = 0; v < Agents.length; v++) {
+        if (userAgentInfo.indexOf(Agents[v]) > 0) {
+            flag = false;
+            break;
+        }
+    }
+    return flag;
+}
+
+var isPc = IsPC();
 //进入全屏
 function requestFullScreen(de) {
     if (de.requestFullscreen) {
@@ -310,7 +326,7 @@ $(function () {
     var $loginPage = $('.login.page'); // The login page
     var $chatPage = $('.container'); // The chatroom page
     var $videoArea = $('.video-area');
-    var $videoSwitchBtn = $('.switch-button-off');
+    var $videoSwitchBtn = $('.switch-button-off,.switch-button-on');
 
     var $slidebox = $('.slidebox');
 
@@ -340,15 +356,19 @@ $(function () {
             videoAreaOff();
         }
     });
-
     function videoAreaOn() {
+       // alert(isPc)
+        if(!isPc){
+            $videoArea.css({width:'100vw'})
+            $('.controlbuttons').css({display:'block',width:'100%'})
+        }
         $videoArea.animate({right: "0px"}, 500);
         $videoSwitchBtn.removeClass("switch-button-off");
         $videoSwitchBtn.addClass("switch-button-on");
     }
 
     function videoAreaOff() {
-        $videoArea.animate({right: "-667px"}, 500);
+        $videoArea.animate({right: isPc?"-667px":'-100vw'}, 500);
         $videoSwitchBtn.removeClass("switch-button-on");
         $videoSwitchBtn.addClass("switch-button-off");
     }
@@ -460,7 +480,7 @@ $(function () {
 
     function addToUserList(user, options) {
         var $el = $('<li id="user-' + user.token + '">').addClass('user');
-        var $userWrap = $('<div style="width:150px;display:inline-block" title="private(私聊)"></div>').text(user.username).css('color', getUsernameColor(user.username));
+        var $userWrap = $('<div style="width:108px;display:inline-block" title="private(私聊)"></div>').text(user.username).css('color', getUsernameColor(user.username));
         var $videoIcon = $('<img src="../app/chat/image/webcam.png" title="video call(视频通话)" height="15" width="15" style="padding-top: 3px;">');
         $el.append($userWrap);
         $el.append($videoIcon);
@@ -492,13 +512,17 @@ $(function () {
                     minimizeButton: true,
                     maximizeButton: true,
                     closeButton: true,
-                    width: 600, height: 500,
-                    posx: 300, posy: 50, title: "与" + target.username + "的对话",
+                    sendBtn:true,
+                    onSendBtnClick:function(_this,privateWin){
+                        sendPrivateMessage(privateWin.find('.private-input')[0])
+                    },
+                    width: isPc?600:window.innerWidth, height: isPc?500:window.innerHeight-50,
+                    posx: isPc?300:0, posy: isPc?50:0, title: "与" + target.username + "的对话",
                     content: '<div class="private-container">' +
                     '<div class="private-messagesEl"><ul class="private-messages">' +
                     '</ul></div>' +
                     '<div class="private-inputEl"></didv>' +
-                    '<textarea resize="false" class="private-input"></textarea>' +
+                    '<textarea resize="false" class="private-input"></textarea>'+
                     '</div>'
                 });
                 $("#privateTalkWindow" + target.token).find('.private-messages').slimScroll({
@@ -535,8 +559,9 @@ $(function () {
                     minimizeButton: true,
                     maximizeButton: true,
                     closeButton: true,
-                    width: 600, height: 500,
-                    posx: 300, posy: 50, title: '编辑 ' + target.username + " 的个人信息",
+                    closeButton: true,
+                    width: isPc?600:window.innerWidth, height: isPc?500:window.innerHeight,
+                    posx: isPc?300:0, posy: isPc?50:0, title: '编辑 ' + target.username + " 的个人信息",
                     content: '<div class="profile-container">姓名:' + target.username + '</p> token:' + target.token + '</div>'
                 });
             }
@@ -859,7 +884,7 @@ $(function () {
         // When the client hits ENTER on their keyboard
         if (event.which === 13) {
             if (username && password) {
-                if (event.target.tagName == 'TEXTAREA' && event.ctrlKey) {
+                if (event.target.tagName == 'TEXTAREA' && (isPc&&event.ctrlKey)) {
                     socket.emit('stop typing');
                     typing = false;
                     sendPrivateMessage(event.target);

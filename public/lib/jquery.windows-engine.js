@@ -140,11 +140,17 @@ jQuery.extend({
         $windowContent = $('<div class="window-content"></div>');
         $windowStatusBar = $('<div class="window-statusBar"></div>');
         $windowResizeIcon = $('<div class="window-resizeIcon"></div>');
-
+        $windowSenderIcon = $('<span style="float: right;margin-right: 15px;" class="window-SenderIcon">发送</span>');
         if (options.minimizeButton) $titleBar.append($windowMinimizeButton);
         if (options.maximizeButton) $titleBar.append($windowMaximizeButton);
         if (options.closeButton) $titleBar.append($windowCloseButton);
         if (options.resizeable) $windowStatusBar.append($windowResizeIcon);
+        if (options.sendBtn) $windowStatusBar.append($windowSenderIcon);
+        $windowSenderIcon.on('click',function(){
+            if(options.onSendBtnClick){
+                options.onSendBtnClick(this,$windowContainer)
+            }
+        })
         $windowContainer.append($titleBar);
         $windowContent.append(options.content);
         $windowContainer.append($windowContent);
