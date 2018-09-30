@@ -8,8 +8,9 @@ function requestFullScreen(de) {
         de.webkitRequestFullScreen();
     }
 }
- //退出全屏
- function exitFullscreen(de) {
+
+//退出全屏
+function exitFullscreen(de) {
     if (de.exitFullscreen) {
         de.exitFullscreen();
     } else if (de.mozCancelFullScreen) {
@@ -18,7 +19,29 @@ function requestFullScreen(de) {
         de.webkitCancelFullScreen();
     }
 }
+function stopStream(stream) {
+    var i;
+    var tracks;
 
+    tracks = stream.getAudioTracks();
+    for( i = 0; i < tracks.length; i++ ) {
+        try {
+            tracks[i].stop();
+        } catch(err){}
+    }
+    tracks = stream.getVideoTracks();
+    for( i = 0; i < tracks.length; i++ ) {
+        try {
+            tracks[i].stop();
+        } catch(err){}
+    }
+
+    if (typeof stream.stop === 'function') {
+        try {
+            stream.stop();
+        } catch(err){}
+    }
+}
 $(function () {
     var socket = io();
     //rtc start
@@ -27,19 +50,23 @@ $(function () {
     var rtc_session_description = null;
     var get_user_media = null;
     var connect_stream_to_src = null;
-    var stun_server =  {
+    var stun_server = {
         "iceServers": [
+            {
+                "url": 'turn:123.15.36.82:3478',
+                username: 'aims',
+                credential: 'AIMS5@dcsoft'
+            },
             {"url": "stun:stun.voiparound.com"},
             {"url": "stun:stun.sipgate.net"},
             {"url": "stun:217.10.68.152"},
             {"url": "stun:stun.sipgate.net:10000"},
             {"url": "stun:217.10.68.152:10000"},
-            {"url": "stun:stun.l.google.com:19302"}
         ]
     };
-    var iceCandidate=null
-    var isStarted=false;
-    var option={};
+    var iceCandidate = null
+    var isStarted = false;
+    var option = {};
     var sdpConstraints = {
         'mandatory': {
             'OfferToReceiveAudio': true,
@@ -47,71 +74,74 @@ $(function () {
         }
     };
 
-    navigator.getUserMedia= navigator.getUserMedia|| navigator.webkitGetUserMedia|| navigator.mozGetUserMedia|| navigator.msGetUserMedia;
-    window.URL= window.URL|| window.webkitURL|| window.mozURL|| window.msURL;
-    try{
-        rtc_pc    =RTCPeerConnection;
-        rtc_session_description=RTCSessionDescription;
-    iceCandidate=RTCIceCandidate;
-    }catch(e){
-        try{
-            rtc_pc    =webkitRTCPeerConnection;
-            rtc_session_description=RTCSessionDescription;
-            iceCandidate=RTCIceCandidate;
-        }catch(e){
-            rtc_pc    =mozRTCPeerConnection;
-            rtc_session_description=mozRTCSessionDescription;
-            iceCandidate=mozRTCIceCandidate;
+    navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+    window.URL = window.URL || window.webkitURL || window.mozURL || window.msURL;
+    try {
+        rtc_pc = RTCPeerConnection;
+        rtc_session_description = RTCSessionDescription;
+        iceCandidate = RTCIceCandidate;
+    } catch (e) {
+        try {
+            rtc_pc = webkitRTCPeerConnection;
+            rtc_session_description = RTCSessionDescription;
+            iceCandidate = RTCIceCandidate;
+        } catch (e) {
+            rtc_pc = mozRTCPeerConnection;
+            rtc_session_description = mozRTCSessionDescription;
+            iceCandidate = mozRTCIceCandidate;
         }
     }
-    get_user_media          = navigator.getUserMedia.bind(navigator);
-    if (navigator.getUserMedia){
-        connect_stream_to_src = function(media_stream, $media_element) {
-            var srcObject='';
-            var media_element=$media_element.get(0);
-            if(media_element.srcObject){
-                srcObject='srcObject';
-            }else if(media_element.mozSrcObject){
-                srcObject='mozSrcObject';
-            }else{
-                srcObject='src';
+    get_user_media = navigator.getUserMedia.bind(navigator);
+    if (navigator.getUserMedia) {
+        connect_stream_to_src = function (media_stream, $media_element) {
+            var srcObject = '';
+            var media_element = $media_element.get(0);
+            if (media_element.srcObject) {
+                srcObject = 'srcObject';
+            } else if (media_element.mozSrcObject) {
+                srcObject = 'mozSrcObject';
+            } else {
+                srcObject = 'src';
             }
             if (window.URL) {
                 media_element.src = window.URL.createObjectURL(media_stream);
             } else {
                 media_element[srcObject] = media_stream;
             }
-            if($media_element.hasClass('local_video')){
-                media_element.volume=0;
-            }else{
-                media_element.volume=1;
+            if ($media_element.hasClass('local_video')) {
+                media_element.volume = 0;
+            } else {
+                media_element.volume = 1;
             }
             media_element.autoplay = true;
             //media_element.play();
         }
-    }else{
+    } else {
         alert("This browser does not support WebRTC - visit WebRTC.org for more info");
         isSupport = false;
     }
 
     // setup stream from the local camera
-    function  setup_video(videoOption) {
-        option=videoOption;
+    function setup_video(videoOption) {
+        option = videoOption;
         get_user_media(
-            option[0],option[1],option[2]
+            option[0], option[1], option[2]
         );
     }
+
     function log_error(err) {
         console.log(err);
-        if(err.name=='DevicesNotFoundError'){
+        if (err.name == 'DevicesNotFoundError') {
             delete option[0].video;
             setup_video(option);
-        }else{
+        } else {
             console.log(err);
-        };
+        }
+        ;
     }
-    function createPeerConnection(data,isCaller) {
-        pc = new rtc_pc(stun_server,{
+
+    function createPeerConnection(data, isCaller) {
+        pc = new rtc_pc(stun_server, {
             optional: [
                 {DtlsSrtpKeyAgreement: true},
                 {RtpDataChannels: true}
@@ -131,33 +161,47 @@ $(function () {
         };
     }
 
-    function doCall(data){
-        pc.createOffer( function(desc) {
-            pc.setLocalDescription(desc,function(){},function(){});
-            data.sdp=desc;
+    function doCall(data) {
+        pc.createOffer(function (desc) {
+            pc.setLocalDescription(desc, function () {
+            }, function () {
+            });
+            data.sdp = desc;
             socket.emit('set_caller_description', data);
-        },function(err){console.log(err)});
+        }, function (err) {
+            console.log(err)
+        });
     }
-    socket.on('new_ice_candidate',function(data){
-        pc.addIceCandidate(new iceCandidate(data.candidate ),function(){},function(){});
+
+    socket.on('new_ice_candidate', function (data) {
+        pc.addIceCandidate(new iceCandidate(data.candidate), function () {
+        }, function () {
+        });
     });
-    socket.on('set_description',function(data){
+    socket.on('set_description', function (data) {
         if (data.sdp)
-            pc.setRemoteDescription(new rtc_session_description(data.sdp),function () {
+            pc.setRemoteDescription(new rtc_session_description(data.sdp), function () {
                     if (pc.remoteDescription.type == "offer") {
                         // Since the 'remote' side has no media stream we need
                         // to pass in the right constraints in order for it to
                         // accept the incoming offer of audio and video.
-                        pc.createAnswer(gotDescription, function(erro){console.log(erro)},sdpConstraints);
+                        pc.createAnswer(gotDescription, function (erro) {
+                            console.log(erro)
+                        }, sdpConstraints);
                     }
                 },
-                function(erro){console.log(erro)});
+                function (erro) {
+                    console.log(erro)
+                });
+
         function gotDescription(desc) {
-            pc.setLocalDescription(desc,function(){},function(){});
-            data.sdp=desc;
-            if(pc.remoteDescription.type == "offer"){
+            pc.setLocalDescription(desc, function () {
+            }, function () {
+            });
+            data.sdp = desc;
+            if (pc.remoteDescription.type == "offer") {
                 socket.emit('set_callee_description', data);
-            }else{
+            } else {
                 socket.emit('set_caller_description', data);
             }
         }
@@ -165,81 +209,81 @@ $(function () {
     //rtc end
     //video controller start
 
-    $("#hangup").click(function(){
-        if(pc){
+    $("#hangup").click(function () {
+        if (pc) {
             pc.close();
-            $("#localVideo").get(0).src="";
+            $("#localVideo").get(0).src = "";
             if (window.stream) {
-                window.stream.stop();
+                stopStream(window.stream)
             }
             exitFullscreen(document);
             videoAreaOff();
         }
 
-        socket.emit(pc.isCaller?'caller hangup':'callee hangup',pc.data);
-      /*  var videoTrack = localStream.getVideoTracks();
-        var audioTrack = userStream.getAudioTracks();
-        if (videoTrack.length > 0) {
-            localStream.removeTrack(videoTrack[0]);
-        }
-        if (audioTrack.length > 0) {
-            localStream.removeTrack(audioTrack[0]);
-        }
-        connect_stream_to_src(localStream,$("#localVido"));*/
+        socket.emit(pc.isCaller ? 'caller hangup' : 'callee hangup', pc.data);
+        /*  var videoTrack = localStream.getVideoTracks();
+          var audioTrack = userStream.getAudioTracks();
+          if (videoTrack.length > 0) {
+              localStream.removeTrack(videoTrack[0]);
+          }
+          if (audioTrack.length > 0) {
+              localStream.removeTrack(audioTrack[0]);
+          }
+          connect_stream_to_src(localStream,$("#localVido"));*/
     });
-    socket.on('hangup',function(data){
-        if(pc){
+    socket.on('hangup', function (data) {
+        if (pc) {
             pc.close();
-            $("#localVideo").get(0).src="";
+            $("#localVideo").get(0).src = "";
             if (window.stream) {
-                window.stream.stop();
+                stopStream(stream)
             }
             exitFullscreen(document);
             videoAreaOff();
         }
     });
 
-    $("#fullscreen").click(function(){
-        if($(this).html()=='全屏'){
-            requestFullScreen( $(".video-area")[0]);
-        }else{
+    $("#fullscreen").click(function () {
+        if ($(this).html() == '全屏') {
+            requestFullScreen($(".video-area")[0]);
+        } else {
             exitFullscreen(document);
         }
 
     });
-
 
 
     document.addEventListener('fullscreenchange', fullscreenChange, false);
     document.addEventListener('msfullscreenchange', fullscreenChange, false);
     document.addEventListener('mozfullscreenchange', fullscreenChange, false);
     document.addEventListener('webkitfullscreenchange', fullscreenChange, false);
-    function fullscreenChange(){
-        var isFullScreen=document.webkitIsFullScreen||document.mozFullScreen||document.msFullscreen||document.fullscreen;
-        if(isFullScreen){
+
+    function fullscreenChange() {
+        var isFullScreen = document.webkitIsFullScreen || document.mozFullScreen || document.msFullscreen || document.fullscreen;
+        if (isFullScreen) {
             $("#fullscreen").html("退出");
-        }else{
+        } else {
             $("#fullscreen").html("全屏");
         }
     }
 
-    $("#swapview").click(function(){
-        var local=$("#localVideo");
-        var remote=$("#remoteVideo");
-        if(local.hasClass("local_video")){
+    $("#swapview").click(function () {
+        var local = $("#localVideo");
+        var remote = $("#remoteVideo");
+        if (local.hasClass("local_video")) {
             local.removeClass("local_video");
             local.addClass("remote_video");
             remote.removeClass("remote_video");
             remote.addClass("local_video");
-            remote.css('z-index',1);
-            local.css('z-index',0);
-        }else{
+            remote.css('z-index', 1);
+            local.css('z-index', 0);
+        } else {
             local.removeClass("remote_video");
             local.addClass("local_video");
             remote.removeClass("local_video");
             remote.addClass("remote_video");
-            remote.css('z-index',0);
-            local.css('z-index',1);
+            remote.css('z-index', 0);
+            local.css('z-index', 1);
         }
     });
 
@@ -247,7 +291,7 @@ $(function () {
     var FADE_TIME = 150; // ms
     var TYPING_TIMER_LENGTH = 400; // ms
 
-    var unReadMessages={};
+    var unReadMessages = {};
 
     var COLORS = [
         '#e21400', '#91580f', '#f8a700', '#f78b00',
@@ -260,22 +304,22 @@ $(function () {
     var $usernameInput = $('#username'); // Input for username
     var $passwordInput = $('#password'); // Input for pwd
     var $messages = $('.messages'); // Messages area
-    var $userList=$('.userlist');
+    var $userList = $('.userlist');
     var $inputMessage = $('.inputMessage'); // Input message input box
 
     var $loginPage = $('.login.page'); // The login page
     var $chatPage = $('.container'); // The chatroom page
-    var $videoArea= $('.video-area');
-    var $videoSwitchBtn= $('.switch-button-off');
+    var $videoArea = $('.video-area');
+    var $videoSwitchBtn = $('.switch-button-off');
 
-    var $slidebox=$('.slidebox');
+    var $slidebox = $('.slidebox');
 
     // Prompt for setting a username
-    var username, password,token;
+    var username, password, token;
     var connected = false;
     var typing = false;
     var lastTypingTime;
-    var privateTyping=false;
+    var privateTyping = false;
     var lastPrivateTypingTime;
     var $currentInput = $usernameInput.focus();
 
@@ -289,23 +333,26 @@ $(function () {
         $currentInput = $passwordInput;
     });
 
-    $videoSwitchBtn.click(function(){
-        if($videoSwitchBtn.hasClass("switch-button-off")){
+    $videoSwitchBtn.click(function () {
+        if ($videoSwitchBtn.hasClass("switch-button-off")) {
             videoAreaOn();
-        }else{
+        } else {
             videoAreaOff();
         }
     });
-    function videoAreaOn(){
-        $videoArea.animate({right:"0px"},500);
+
+    function videoAreaOn() {
+        $videoArea.animate({right: "0px"}, 500);
         $videoSwitchBtn.removeClass("switch-button-off");
         $videoSwitchBtn.addClass("switch-button-on");
     }
-    function videoAreaOff(){
-        $videoArea.animate({right:"-667px"},500);
+
+    function videoAreaOff() {
+        $videoArea.animate({right: "-667px"}, 500);
         $videoSwitchBtn.removeClass("switch-button-on");
         $videoSwitchBtn.addClass("switch-button-off");
     }
+
     function addParticipantsMessage(data) {
         var message = '';
         if (data.numUsers === 1) {
@@ -315,12 +362,14 @@ $(function () {
         }
         log(message);
     }
-    $(".controller").mouseenter(function(){
+
+    $(".controller").mouseenter(function () {
         $(".controlbuttons").fadeIn();
     });
-    $(".controller").mouseleave(function(){
+    $(".controller").mouseleave(function () {
         $(".controlbuttons").fadeOut();
     });
+
     // Sets the client's username
     function setUsername() {
         username = cleanInput($usernameInput.val().trim());
@@ -360,35 +409,35 @@ $(function () {
         if (message && connected) {
             $inputMessage.val('');
             addChatMessage({
-                token:token,
+                token: token,
                 username: username,
                 message: message
             });
             // tell server to execute 'new message' and send along one parameter
-            socket.emit('new message', {token:token,username: username,message:message});
+            socket.emit('new message', {token: token, username: username, message: message});
         }
     }
 
-    function sendPrivateMessage(inputArea){
+    function sendPrivateMessage(inputArea) {
         var $privateMessageSend;
-        var $inputMessage=$(inputArea);
+        var $inputMessage = $(inputArea);
         var message = $inputMessage.val();
         // Prevent markup from being injected into the message
         message = cleanInput(message);
-        var twin=(((($inputMessage.parent()).parent()).parent()).parent());
-        var toToken=twin.attr('toToken');
+        var twin = (((($inputMessage.parent()).parent()).parent()).parent());
+        var toToken = twin.attr('toToken');
         // if there is a non-empty message and a socket connection
         if (message && connected) {
             $inputMessage.val('');
             addPrivateChatMessage({
-                token:token,
+                token: token,
                 username: username,
                 message: message,
-                from:token,
-                to:toToken
-            },{action:'send private message'});
+                from: token,
+                to: toToken
+            }, {action: 'send private message'});
             // tell server to execute 'new message' and send along one parameter
-            socket.emit('private message', {from:token,username: username,message:message,to:toToken});
+            socket.emit('private message', {from: token, username: username, message: message, to: toToken});
         }
         /* $("#send").click(function(e){
          var from = $('#user_name').val(),
@@ -402,113 +451,117 @@ $(function () {
          });
          });*/
     }
+
     // Log a message
     function log(message, options) {
         var $el = $('<li>').addClass('log').text(message);
         addMessageElement($el, options);
     }
 
-    function addToUserList(user,options) {
-        var $el = $('<li id="user-'+user.token+'">').addClass('user');
-        var $userWrap=$('<div style="width:150px;display:inline-block" title="私聊"></div>').text(user.username).css('color',getUsernameColor(user.username));
-        var $videoIcon=$('<img src="../app/chat/image/webcam.png" title="视频通话" height="15" width="15" style="padding-top: 3px;">');
+    function addToUserList(user, options) {
+        var $el = $('<li id="user-' + user.token + '">').addClass('user');
+        var $userWrap = $('<div style="width:150px;display:inline-block" title="私聊"></div>').text(user.username).css('color', getUsernameColor(user.username));
+        var $videoIcon = $('<img src="../app/chat/image/webcam.png" title="视频通话" height="15" width="15" style="padding-top: 3px;">');
         $el.append($userWrap);
         $el.append($videoIcon);
-        $el.attr("token",user.token);
-        $el.attr("username",user.username);
+        $el.attr("token", user.token);
+        $el.attr("username", user.username);
         $userWrap.click(onUserClick);
         $videoIcon.click(onVideoIconClick);
         addUserElement($el, options);
     }
-    function removeFromUserList(user,options) {
-        var $el=$userList.children('li[token='+user.token+']');
-        if($el.get(0)){
+
+    function removeFromUserList(user, options) {
+        var $el = $userList.children('li[token=' + user.token + ']');
+        if ($el.get(0)) {
             $el.remove();
         }
     }
-    function onUserClick(){
-        var $user=$(this).parent();
-        var me={username:username,token:token};
-        var target={username:$user.attr('username'),token:$user.attr('token')};
-        if(me.token!=target.token){
-            var talkWindow=$("#privateTalkWindow"+target.token);
-            if(talkWindow.get(0)){
+
+    function onUserClick() {
+        var $user = $(this).parent();
+        var me = {username: username, token: token};
+        var target = {username: $user.attr('username'), token: $user.attr('token')};
+        if (me.token != target.token) {
+            var talkWindow = $("#privateTalkWindow" + target.token);
+            if (talkWindow.get(0)) {
                 $.setWindowFocus(talkWindow);
-            }else{
+            } else {
                 $.newWindow({
-                    id:"privateTalkWindow"+target.token,
+                    id: "privateTalkWindow" + target.token,
                     minimizeButton: true,
                     maximizeButton: true,
                     closeButton: true,
-                    width:600,height:500,
-                    posx:300,posy:50,title:"与"+target.username+"的对话",
-                    content:'<div class="private-container">' +
-                        '<div class="private-messagesEl"><ul class="private-messages">' +
-                        '</ul></div>' +
-                        '<div class="private-inputEl"></didv>'+
-                        '<textarea resize="false" class="private-input"></textarea>' +
-                        '</div>'
+                    width: 600, height: 500,
+                    posx: 300, posy: 50, title: "与" + target.username + "的对话",
+                    content: '<div class="private-container">' +
+                    '<div class="private-messagesEl"><ul class="private-messages">' +
+                    '</ul></div>' +
+                    '<div class="private-inputEl"></didv>' +
+                    '<textarea resize="false" class="private-input"></textarea>' +
+                    '</div>'
                 });
-                $("#privateTalkWindow"+target.token).find('.private-messages').slimScroll({
-                    size:8,
+                $("#privateTalkWindow" + target.token).find('.private-messages').slimScroll({
+                    size: 8,
                     color: '#555',
                     height: '100%',
                     alwaysVisible: true,
                     railVisible: false
                 });
-                $("#privateTalkWindow"+target.token).find('.private-input').on('input',function () {
-                    updatePrivateTyping({token:token,from:token,to:target.token,username:username});
+                $("#privateTalkWindow" + target.token).find('.private-input').on('input', function () {
+                    updatePrivateTyping({token: token, from: token, to: target.token, username: username});
                 });
 
-                talkWindow=$("#privateTalkWindow"+target.token);
+                talkWindow = $("#privateTalkWindow" + target.token);
             }
-            talkWindow.attr('fromToken',token);
-            talkWindow.attr('toToken',target.token);
-            if(unReadMessages[target.token]){
-                var msgs=unReadMessages[target.token];
-                var messageEl=talkWindow.find('.private-messages');
-                for(var i=0;i<msgs.length;i++){
-                    addPrivateChatMessage(msgs[i],{action:'open message window'});
+            talkWindow.attr('fromToken', token);
+            talkWindow.attr('toToken', target.token);
+            if (unReadMessages[target.token]) {
+                var msgs = unReadMessages[target.token];
+                var messageEl = talkWindow.find('.private-messages');
+                for (var i = 0; i < msgs.length; i++) {
+                    addPrivateChatMessage(msgs[i], {action: 'open message window'});
                 }
                 delete unReadMessages[target.token];
-                $('#user-'+target.token).removeClass('new-private-message');
+                $('#user-' + target.token).removeClass('new-private-message');
             }
-        }else{
-            var profileWindow=$("#profileWindow"+target.token);
-            if(profileWindow.get(0)){
+        } else {
+            var profileWindow = $("#profileWindow" + target.token);
+            if (profileWindow.get(0)) {
                 $.setWindowFocus(profileWindow);
-            }else {
+            } else {
                 $.newWindow({
                     id: "profileWindow" + target.token,
                     minimizeButton: true,
                     maximizeButton: true,
                     closeButton: true,
                     width: 600, height: 500,
-                    posx: 300, posy: 50, title:'编辑 '+target.username + " 的个人信息",
+                    posx: 300, posy: 50, title: '编辑 ' + target.username + " 的个人信息",
                     content: '<div class="profile-container">姓名:' + target.username + '</p> token:' + target.token + '</div>'
                 });
             }
         }
     }
-    function onVideoIconClick(){
-        var $user=$(this).parent();
-        var target={username:$user.attr('username'),token:$user.attr('token')};
-        var me={username:username,token:token};
-        if(me.token!=target.token){
+
+    function onVideoIconClick() {
+        var $user = $(this).parent();
+        var target = {username: $user.attr('username'), token: $user.attr('token')};
+        var me = {username: username, token: token};
+        if (me.token != target.token) {
             // if(RTC.isSupport==true){
             //RTC.start();
-            var data={
-                title:"提示",
+            var data = {
+                title: "提示",
                 username: username,
-                message: '发送请求，等待'+target.username+"的响应！",
-                from:token,
-                to:target.token
+                message: '发送请求，等待' + target.username + "的响应！",
+                from: token,
+                to: target.token
             };
             sendVideoRequest(data);
             //}else{
             //alert('您的浏览器不支持视频通信，请升级浏览器版本（推荐使用Chrome）！');
             //}
-        }else{
+        } else {
             alert('不能向自己发送视频请求！');
         }
 
@@ -525,7 +578,7 @@ $(function () {
         }
 
         var $usernameDiv = $('<span class="username"/>')
-            //  .text(((data.username==username)?'我':data.username) + ":")
+        //  .text(((data.username==username)?'我':data.username) + ":")
             .text(data.username + ":")
             .css('color', getUsernameColor(data.username));
         var $messageBodyDiv = $('<span class="messageBody">')
@@ -539,11 +592,12 @@ $(function () {
 
         addMessageElement($messageDiv, options);
     }
+
     function addPrivateChatMessage(data, options) {
         // Don't fade the message in if there is an 'X was typing'
         var typingClass = data.typing ? 'typing' : '';
-        data.typingClass=typingClass;
-        var $typingMessages =  getPrivateTypingMessages(data);
+        data.typingClass = typingClass;
+        var $typingMessages = getPrivateTypingMessages(data);
         options = options || {};
         if ($typingMessages.length !== 0) {
             options.fade = false;
@@ -556,50 +610,55 @@ $(function () {
             .text(data.message);
 
         var $messageDiv = $('<li class="message"/>')
-            .data('talkToken', data.from+data.to+data.typingClass)
+            .data('talkToken', data.from + data.to + data.typingClass)
             .addClass(typingClass)
             .append($usernameDiv, $messageBodyDiv);
         var messageEl;
-        if(options.action=='send private message'){
-            messageEl=$("#privateTalkWindow"+data.to).find('.private-messages');
-        }else if(options.action=='receive private message'||options.action=='open message window'){
-            messageEl=$("#privateTalkWindow"+data.from).find('.private-messages');
-            if(!messageEl.get(0)){
-                if(unReadMessages[data.from]){
+        if (options.action == 'send private message') {
+            messageEl = $("#privateTalkWindow" + data.to).find('.private-messages');
+        } else if (options.action == 'receive private message' || options.action == 'open message window') {
+            messageEl = $("#privateTalkWindow" + data.from).find('.private-messages');
+            if (!messageEl.get(0)) {
+                if (unReadMessages[data.from]) {
                     unReadMessages[data.from].push(data);
-                }else{
-                    unReadMessages[data.from]=[data];
+                } else {
+                    unReadMessages[data.from] = [data];
                 }
-                $('#user-'+data.from).addClass('new-private-message');
+                $('#user-' + data.from).addClass('new-private-message');
                 return;
             }
-        }else if(options.action=='private typing'){
-            var win=$("#privateTalkWindow"+data.from)
-            messageEl=win.find('.private-messages');
-            if(!messageEl.get(0)||data.to!=win.attr("fromToken")){
+        } else if (options.action == 'private typing') {
+            var win = $("#privateTalkWindow" + data.from)
+            messageEl = win.find('.private-messages');
+            if (!messageEl.get(0) || data.to != win.attr("fromToken")) {
                 return;
-            };
+            }
+            ;
         }
-        addPrivateMessageElement($messageDiv,options,messageEl);
+        addPrivateMessageElement($messageDiv, options, messageEl);
     }
+
     // Adds the visual chat typing message
     function addChatTyping(data) {
         data.typing = true;
         data.message = '正在输入...';
         addChatMessage(data);
     }
+
     // Adds the visual chat typing message
     function addPrivateChatTyping(data) {
         data.typing = true;
         data.message = '正在输入...';
-        addPrivateChatMessage(data,{action:'private typing'});
+        addPrivateChatMessage(data, {action: 'private typing'});
     }
+
     // Removes the visual chat typing message
     function removeChatTyping(data) {
         getTypingMessages(data).fadeOut(function () {
             $(this).remove();
         });
     }
+
     function removePrivateChatTyping(data) {
         getPrivateTypingMessages(data).fadeOut(function () {
             $(this).remove();
@@ -636,7 +695,8 @@ $(function () {
         }
         $messages[0].scrollTop = $messages[0].scrollHeight;
     }
-    function addPrivateMessageElement(el, options,messageEl) {
+
+    function addPrivateMessageElement(el, options, messageEl) {
         var $el = $(el);
         // Setup default options
         if (!options) {
@@ -717,7 +777,7 @@ $(function () {
         if (data) {
             if (!privateTyping) {
                 privateTyping = true;
-                socket.emit('private typing',data);
+                socket.emit('private typing', data);
             }
             lastPrivateTypingTime = (new Date()).getTime();
 
@@ -725,50 +785,54 @@ $(function () {
                 var typingTimer = (new Date()).getTime();
                 var timeDiff = typingTimer - lastPrivateTypingTime;
                 if (timeDiff >= TYPING_TIMER_LENGTH && privateTyping) {
-                    socket.emit('stop private typing',data);
+                    socket.emit('stop private typing', data);
                     privateTyping = false;
                 }
             }, TYPING_TIMER_LENGTH);
         }
     }
 
-    function sendVideoRequest(data){
+    function sendVideoRequest(data) {
         $slidebox.slidebox();
         $slidebox.open(data);
         socket.emit('video request', data);
     }
-    function receiveVideoRequest(data){
-        data.title="提示";
-        data.message=data.message+'<br/><button id="rejectVideoRequestBtnYes">yes</button>&nbsp;&nbsp;&nbsp;<button id="rejectVideoRequestBtnNo">no</button>';
+
+    function receiveVideoRequest(data) {
+        data.title = "提示";
+        data.message = data.message + '<br/><button id="rejectVideoRequestBtnYes">yes</button>&nbsp;&nbsp;&nbsp;<button id="rejectVideoRequestBtnNo">no</button>';
         $slidebox.slidebox();
         $slidebox.open(data);
-        var handleBtnYes=document.getElementById('rejectVideoRequestBtnYes');
-        var handleBtnNo=document.getElementById('rejectVideoRequestBtnNo');
-        if(handleBtnYes&&handleBtnYes){
-            handleBtnYes.onclick= handleBtnNo.onclick=function(e){
-                if(this.id=='rejectVideoRequestBtnNo'){
-                    handleVideoRequest('reject',data)
-                }else{
-                    handleVideoRequest('accept',data)
+        var handleBtnYes = document.getElementById('rejectVideoRequestBtnYes');
+        var handleBtnNo = document.getElementById('rejectVideoRequestBtnNo');
+        if (handleBtnYes && handleBtnYes) {
+            handleBtnYes.onclick = handleBtnNo.onclick = function (e) {
+                if (this.id == 'rejectVideoRequestBtnNo') {
+                    handleVideoRequest('reject', data)
+                } else {
+                    handleVideoRequest('accept', data)
                 }
             }
         }
     }
-    function handleVideoRequest(operation,data){
-        data.operation=operation;
-        data.username=username;
-        data.message=data.username+(operation=='accept'?'接受':'拒绝')+"了你的视频请求！";
+
+    function handleVideoRequest(operation, data) {
+        data.operation = operation;
+        data.username = username;
+        data.message = data.username + (operation == 'accept' ? '接受' : '拒绝') + "了你的视频请求！";
         socket.emit('handle video request', data);
     }
+
     // Gets the 'X is typing' messages of a user
     function getTypingMessages(data) {
         return $('.typing.message').filter(function (i) {
             return $(this).data('username') === data.username;
         });
     }
+
     function getPrivateTypingMessages(data) {
         return $('.typing.message').filter(function (i) {
-            return $(this).data('talkToken') === data.from+data.to+data.typingClass;
+            return $(this).data('talkToken') === data.from + data.to + data.typingClass;
         });
     }
 
@@ -785,26 +849,26 @@ $(function () {
     }
 
 
-
     // Keyboard events
 
     $window.keydown(function (event) {
         // Auto-focus the current input when a key is typed
-        if (!(event.ctrlKey || event.metaKey || event.altKey)&&event.target.tagName!='TEXTAREA') {
+        if (!(event.ctrlKey || event.metaKey || event.altKey) && event.target.tagName != 'TEXTAREA') {
             $currentInput.focus();
         }
         // When the client hits ENTER on their keyboard
         if (event.which === 13) {
             if (username && password) {
-                if(event.target.tagName=='TEXTAREA'&&event.ctrlKey){
+                if (event.target.tagName == 'TEXTAREA' && event.ctrlKey) {
                     socket.emit('stop typing');
                     typing = false;
                     sendPrivateMessage(event.target);
-                }else{
+                } else {
                     sendMessage();
                     socket.emit('stop typing');
                     typing = false;
-                };
+                }
+                ;
             } else {
                 if ($currentInput.get(0).id == 'username' && !cleanInput($passwordInput.val().trim())) {
                     $currentInput = $passwordInput.focus();
@@ -843,12 +907,12 @@ $(function () {
             prepend: true
         });
         addParticipantsMessage(data);
-        username=data.username;
-        token=data.token;
-        userList=data.userNames;
-        for(p in userList){
-            var $el=$userList.children('li[token='+userList[p].token+']');
-            if(!$el.get(0)){
+        username = data.username;
+        token = data.token;
+        userList = data.userNames;
+        for (p in userList) {
+            var $el = $userList.children('li[token=' + userList[p].token + ']');
+            if (!$el.get(0)) {
                 addToUserList(userList[p]);
             }
         }
@@ -864,7 +928,7 @@ $(function () {
     // Whenever the server emits 'user joined', log it in the chat body
     socket.on('user joined', function (data) {
         log(data.username + ' 加入聊天室');
-        userList[data.token]= {username:data.username,token:data.token};
+        userList[data.token] = {username: data.username, token: data.token};
         addParticipantsMessage(data);
         addToUserList(data);
     });
@@ -889,7 +953,7 @@ $(function () {
 
     // Whenever the server emits 'stop typing', kill the typing message
     socket.on('stop private typing', function (data) {
-        data.typingClass='typing';
+        data.typingClass = 'typing';
         removePrivateChatTyping(data);
     });
 
@@ -904,35 +968,35 @@ $(function () {
          if(data.to in users){
          userClients[data.to].emit('received'+data.to,data);
          }*/
-        addPrivateChatMessage(data,{action:'receive private message'});
+        addPrivateChatMessage(data, {action: 'receive private message'});
     });
-    socket.on('receive video',function(data){
+    socket.on('receive video', function (data) {
         receiveVideoRequest(data);
     });
 
-    socket.on('accept video',function(data){
-      /*  start(data,true);
-        $slidebox.close();
-        videoAreaOn();*/
+    socket.on('accept video', function (data) {
+        /*  start(data,true);
+          $slidebox.close();
+          videoAreaOn();*/
     });
 
-    socket.on('reject video',function(data){
+    socket.on('reject video', function (data) {
         console.log('reject');
     });
-    socket.on('accepted video',function(data){
-        createPeerConnection(data,false);
-        var option=[{
+    socket.on('accepted video', function (data) {
+        createPeerConnection(data, false);
+        var option = [{
             "audio": true, // request access to local microphone
             "video": true  // request access to local camera
         },
             // success callback
-            function(stream) { // success callback
-                window.stream=stream;
-                socket.emit('video started',data);
+            function (stream) { // success callback
+                window.stream = stream;
+                socket.emit('video started', data);
                 // display preview from the local camera & microphone using local <video> MediaElement
-                connect_stream_to_src(stream,$("#localVideo"));
-                pc.isCaller=false;
-                pc.data=data
+                connect_stream_to_src(stream, $("#localVideo"));
+                pc.isCaller = false;
+                pc.data = data
                 pc.addStream(stream);
             },
             log_error
@@ -941,21 +1005,21 @@ $(function () {
         $slidebox.close();
         videoAreaOn();
     });
-    socket.on('callee have started video',function(data){
-        createPeerConnection(data,true);
-        var option=[{
+    socket.on('callee have started video', function (data) {
+        createPeerConnection(data, true);
+        var option = [{
             "audio": true, // request access to local microphone
             "video": true  // request access to local camera
         },
             // success callback
-            function(stream) { // success callback
-                window.stream=stream;
+            function (stream) { // success callback
+                window.stream = stream;
                 // display preview from the local camera & microphone using local <video> MediaElement
-                connect_stream_to_src(stream,$("#localVideo"));
-                pc.isCaller=true;
-                pc.data=data
+                connect_stream_to_src(stream, $("#localVideo"));
+                pc.isCaller = true;
+                pc.data = data
                 pc.addStream(stream);
-                socket.emit('caller video start',data);
+                socket.emit('caller video start', data);
                 doCall(data);
             },
             log_error
@@ -964,7 +1028,7 @@ $(function () {
         $slidebox.close();
         videoAreaOn();
     });
-    socket.on('rejected video',function(data){
+    socket.on('rejected video', function (data) {
         //console.log(data.username+'rejected');
     });
 });
