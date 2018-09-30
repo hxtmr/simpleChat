@@ -375,25 +375,19 @@ ul {
 
 
 :-webkit-full-screen .local_video {
-    top:auto;
+    botton:0;
     bottom: 50px;
     position: absolute;
-    left: 9%;
-    width: 280px;
-    height: 210px;
+    left: 0;
 }
 :-moz-full-screen  .local_video {
-    top:auto;
-    left: 9%;
-    width: 280px;
-    height: 210px;
+    botton:0;
+    left: 0;
 }
 
 :-ms-fullscreen  .local_video {
-    top:auto;
-    left: 9%;
-    width: 280px;
-    height: 210px;
+    botton:0;
+    left: 0;
 }
 /**
 发送按钮样式

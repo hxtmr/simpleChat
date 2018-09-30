@@ -1,3 +1,45 @@
+/**
+ * 生成guest ID
+ * @param len
+ * @param radix
+ * @returns {string}
+ */
+function gid(len, radix) {
+    var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
+    var uuid = [], i;
+    radix = radix || chars.length;
+
+    if (len) {
+        // Compact form
+        for (i = 0; i < len; i++) uuid[i] = chars[0 | Math.random()*radix];
+    } else {
+        // rfc4122, version 4 form
+        var r;
+
+        // rfc4122 requires these characters
+        uuid[8] = uuid[13] = uuid[18] = uuid[23] = '-';
+        uuid[14] = '4';
+
+        // Fill in random data. At i==19 set the high bits of clock sequence as
+        // per rfc4122, sec. 4.1.5
+        for (i = 0; i < 36; i++) {
+            if (!uuid[i]) {
+                r = 0 | Math.random()*16;
+                uuid[i] = chars[(i == 19) ? (r & 0x3) | 0x8 : r];
+            }
+        }
+    }
+
+    return uuid.join('');
+}
+function is_weixn(){
+    var ua = navigator.userAgent.toLowerCase();
+    if(ua.match(/MicroMessenger/i)=="micromessenger") {
+        return true;
+    } else {
+        return false;
+    }
+}
 function IsPC() {
     var userAgentInfo = navigator.userAgent;
     var Agents = ["Android", "iPhone",
@@ -394,7 +436,6 @@ $(function () {
     function setUsername() {
         username = cleanInput($usernameInput.val().trim());
         password = cleanInput($passwordInput.val().trim());
-
         // If the username is valid
         if (username && password) {
             $loginPage.fadeOut();
@@ -1056,4 +1097,17 @@ $(function () {
     socket.on('rejected video', function (data) {
         //console.log(data.username+'rejected');
     });
+    var isWeiXin=is_weixn()
+    if(/*isWeiXin*/true){
+        $('.form').append('<button class="guestbtn">访客登陆</button>')
+        $('.form').find('.guestbtn').on('click',function () {
+            var username='访客'+gid(4,16),password='1'
+            $('#username').val(username)
+            $('#password').val(password)
+            $('.form').append('<div class="">生成的访客ID：'+username+' ，3秒后自动加入。</div>')
+            setTimeout(function(){
+                setUsername()
+            },3000)
+        })
+    }
 });
