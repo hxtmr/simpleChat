@@ -356,9 +356,9 @@ $(function () {
     function addParticipantsMessage(data) {
         var message = '';
         if (data.numUsers === 1) {
-            message += "当前共有 1 位参与者";
+            message += "there are 1 participants(当前共有 1 位参与者)";
         } else {
-            message += "当前共有 " + data.numUsers + " 位参与者";
+            message += "there are "+data.numUsers +" participants,(当前共有 " + data.numUsers + " 位参与者)";
         }
         log(message);
     }
@@ -460,8 +460,8 @@ $(function () {
 
     function addToUserList(user, options) {
         var $el = $('<li id="user-' + user.token + '">').addClass('user');
-        var $userWrap = $('<div style="width:150px;display:inline-block" title="私聊"></div>').text(user.username).css('color', getUsernameColor(user.username));
-        var $videoIcon = $('<img src="../app/chat/image/webcam.png" title="视频通话" height="15" width="15" style="padding-top: 3px;">');
+        var $userWrap = $('<div style="width:150px;display:inline-block" title="private(私聊)"></div>').text(user.username).css('color', getUsernameColor(user.username));
+        var $videoIcon = $('<img src="../app/chat/image/webcam.png" title="video call(视频通话)" height="15" width="15" style="padding-top: 3px;">');
         $el.append($userWrap);
         $el.append($videoIcon);
         $el.attr("token", user.token);
@@ -551,9 +551,9 @@ $(function () {
             // if(RTC.isSupport==true){
             //RTC.start();
             var data = {
-                title: "提示",
+                title: "Info(提示)",
                 username: username,
-                message: '发送请求，等待' + target.username + "的响应！",
+                message: "waiting for "+ target.username + "accept your call(发送请求，等待" + target.username + "的响应！)",
                 from: token,
                 to: target.token
             };
@@ -819,7 +819,7 @@ $(function () {
     function handleVideoRequest(operation, data) {
         data.operation = operation;
         data.username = username;
-        data.message = data.username + (operation == 'accept' ? '接受' : '拒绝') + "了你的视频请求！";
+        data.message = data.username + (operation == 'accept' ? 'accepted(接受了)' : 'rejected(拒绝了)') + "your call(你的视频请求)！";
         socket.emit('handle video request', data);
     }
 
@@ -902,7 +902,7 @@ $(function () {
     socket.on('login', function (data) {
         connected = true;
         // Display the welcome message
-        var message = "欢迎进入聊天室 ^_^ ";
+        var message = "welcome to join us  ^_^(欢迎进入聊天室) ";
         log(message, {
             prepend: true
         });
@@ -927,7 +927,7 @@ $(function () {
 
     // Whenever the server emits 'user joined', log it in the chat body
     socket.on('user joined', function (data) {
-        log(data.username + ' 加入聊天室');
+        log(data.username + ' joined(加入)');
         userList[data.token] = {username: data.username, token: data.token};
         addParticipantsMessage(data);
         addToUserList(data);
@@ -935,7 +935,7 @@ $(function () {
 
     // Whenever the server emits 'user left', log it in the chat body
     socket.on('user left', function (data) {
-        log(data.username + ' 离开聊天室');
+        log(data.username + ' left(离开)');
         addParticipantsMessage(data);
         removeChatTyping(data);
         removeFromUserList(data);
