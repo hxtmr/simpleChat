@@ -5,6 +5,8 @@ process.on('uncaughtException', function(err) {
 
 
 var http = require('http');
+var https = require('https');
+var fs=require("fs");
 var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');//-
@@ -25,10 +27,13 @@ var webrtc_clients = [];
 var webrtc_discussions = {};
 
 // all environments
-var server = http.createServer(app);
+var privateKey  = fs.readFileSync(path.join(__dirname,'ssl/1539248837742.key'), 'utf8');
+var certificate = fs.readFileSync(path.join(__dirname,'ssl/1539248837742.pem'), 'utf8');
+var credentials = {key: privateKey, cert: certificate};
+var httpsServer = https.createServer(credentials, app);
 var io;
 
-app.set('port', config.port || 8080);
+app.set('port', config.port || 443);
 app.set('host', config.host);
 //gzip支持
 //app.use(express.compress());
@@ -65,12 +70,11 @@ app.use(function(req, res, next) {
     });
 });
 
-io = require('socket.io')(server);
-// web socket functions
-
-server.listen(app.get('port'), app.get('host'), function(req, rsp) {
-    console.log('服务端启动成功, http://%s:%d', app.get('host'), app.get('port'));
+io = require('socket.io')(httpsServer);
+httpsServer.listen(app.get('port'), function() {
+    console.log('HTTPS Server is running on: https://localhost:%s', app.get('port'));
 });
+// web socket functions
 
 // usernames which are currently connected to the chat
 var usernames = {};
