@@ -101,7 +101,15 @@ function stopStream(stream) {
     }
 }
 $(function () {
-    var socket = io();
+    var socket = io({
+        transports: ['websocket']
+    });
+    socket.on('connect',function () {
+        console.log('connected')
+    })
+    socket.on('disconnect',function () {
+        console.log('disconnect')
+    })
     //rtc start
     var isSupport = true;
     var rtc_pc = null;
