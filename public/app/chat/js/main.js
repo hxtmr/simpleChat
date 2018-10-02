@@ -883,6 +883,7 @@ $(function () {
             handleBtnYes.onclick = handleBtnNo.onclick = function (e) {
                 if (this.id == 'rejectVideoRequestBtnNo') {
                     handleVideoRequest('reject', data)
+                    $slidebox.close();
                 } else {
                     handleVideoRequest('accept', data)
                 }
