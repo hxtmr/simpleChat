@@ -101,7 +101,9 @@ function stopStream(stream) {
     }
 }
 $(function () {
-    var socket = io();
+    var socket = io({
+        transports: ['websocket']
+    });
     socket.on('connect',function () {
         console.log('connected')
     })
@@ -1054,6 +1056,9 @@ $(function () {
 
     socket.on('reject video', function (data) {
         console.log('reject');
+        console.log(data);
+        alert('rejected(对方拒绝了)！')
+        $slidebox.close();
     });
     socket.on('accepted video', function (data) {
         createPeerConnection(data, false);
