@@ -47,8 +47,6 @@ function initChatLive() {
         nV[0].src = URL.createObjectURL(msource);
         var nbuffer;
         msource.addEventListener('sourceopen', function () {
-      //      console.log('open')
-        //    console.log('open')
             nbuffer = msource.addSourceBuffer("video/webm;codecs=vp9,opus");
             nbuffer.hasAddHeader=false;
             //sourceBuffer.mode="sequence";
@@ -89,25 +87,25 @@ function initChatLive() {
                 }
             }
             if(clusterPos==-1)return null;
-            //console.log(123,clusterPos)
+            // console.log(123,clusterPos)
             var initSegBuffer=new Uint8Array(ber.byteLength-clusterPos)
             initSegBuffer.set(new Uint8Array(ber,clusterPos))
-           // console.log(initSegBuffer)
+            // console.log(initSegBuffer)
             nV[0].currentTime=MAX_TIME;
             initSegBuffer=_appendBuffer([hdata],initSegBuffer);
             nbuffer.hasAddHeader=true
-          //  console.log(initSegBuffer)
+            //console.log(initSegBuffer)
             return initSegBuffer
         }
 
 
         socket.on('videobuffer',function (data) {
-          //  console.log(data)
+            // console.log(data)
             var buffer=data[0]
             if (nbuffer.updating !== true) {
                 try {
                     if (catchedBuffer.length >= 1) {
-                        var mbuffer=_appendBuffer(catchedBuffer,data)
+                        var mbuffer=_appendBuffer(catchedBuffer,buffer)
                         catchedBuffer=[]
                         window.videoBuffers.push(mbuffer)
                         if(nbuffer.hasAddHeader==false){
@@ -125,10 +123,8 @@ function initChatLive() {
                             nbuffer.appendBuffer(buffer)
                         // socket.emit('receiveBuffer' ,buffer);
                     }
-                    catchedBuffer=[];
                 } catch (e) {
                     console.log(e)
-                   // rr.stop()
                 }
 
             } else {

@@ -104,7 +104,7 @@ $(document).ready(function () {
         if (nbuffer.updating !== true) {
             try {
                 if (catchedBuffer.length >= 1) {
-                    var mbuffer=_appendBuffer(catchedBuffer,data)
+                    var mbuffer=_appendBuffer(catchedBuffer,buffer)
                     catchedBuffer=[]
                     window.videoBuffers.push(mbuffer)
                     if(nbuffer.hasAddHeader==false){
@@ -122,7 +122,6 @@ $(document).ready(function () {
                         nbuffer.appendBuffer(buffer)
                     // socket.emit('receiveBuffer' ,buffer);
                 }
-                catchedBuffer=[]
             } catch (e) {
                 console.log(e)
             }

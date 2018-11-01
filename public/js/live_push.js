@@ -46,7 +46,7 @@ $(document).ready(function () {
 
         navigator.mediaDevices.getUserMedia({
             audio: true,
-            video: { width: 320, height: 240 }
+            video: true
         })
             .then(function (stream) {
                 //console.log(stream,video.firstChild.srcObject=stream)
@@ -93,7 +93,6 @@ $(document).ready(function () {
                         console.log(e)
                         self.stop()
                     }
-                    self.catchedBuffer = []
                 } else {
                     self.catchedBuffer.push(reader.result)
                 }
