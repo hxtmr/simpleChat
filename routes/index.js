@@ -17,5 +17,19 @@ router.get('/', controllers.index);
 //router.post('/getlrc',controllers.getLrc);
 // app.get('/lancet-anesthesia', sys.desktop);
 //app.get('/sys/now', sys.now);
-
+router.get('/push', function (req, res) {
+    res.render('live_push',{
+        title:'视频采集'
+    })
+});
+router.get('/pull', function (req, res) {
+    res.render('live_pull',{
+        title:'视频采集'
+    })
+});
+router.get('/read', function (req, res) {
+    res.render('readable',{
+        title:'视频采集'
+    })
+});
 module.exports=router;

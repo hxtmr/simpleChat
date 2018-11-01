@@ -1,10 +1,11 @@
-
+var buffer=require('buffer')
 process.on('uncaughtException', function(err) {
     console.log('uncaughtException：' + err.stack);
 });
-
-
+var videoHeader=null;
+var firstCluster=null;
 var http = require('http');
+var log = require('log4js').getLogger('app');
 var https = require('https');
 var fs=require("fs");
 var express = require('express');
@@ -56,7 +57,7 @@ app.use('/users', users);
 app.use(function(err, req, res, next) {
     // treat as 404  ~位运算 NOT 实质上是对数字求负，然后减 1
     if (~err.message.indexOf('not found')) return next();
-    log.error(err.stack);
+    log.info(err.stack);
     res.json(500, {
         sucess: false,
         errors: err.message
@@ -82,6 +83,7 @@ var numUsers = 0;
 var userClients={};
 io.on('connection', function (socket) {
     var addedUser = false;
+    socket.emit('videoHeader',videoHeader)
     // when the client emits 'new message', this listens and executes
     socket.on('new message', function (data) {
         // we tell the client to execute 'new message'
@@ -89,6 +91,10 @@ io.on('connection', function (socket) {
             username: socket.username,
             message: data
         });
+    });
+    socket.on('getHeader', function (data) {
+        // we tell the client to execute 'new message'
+        socket.emit('videoHeader',videoHeader)
     });
     // when the client emits 'add user', this listens and executes
     socket.on('add user', function (username) {
@@ -122,8 +128,52 @@ io.on('connection', function (socket) {
             username: socket.username
         });
     });
-
-
+    /* var s=[fs.createWriteStream('./b1.webM',{
+         flags:'a'
+     }),
+     fs.createWriteStream('./b2.webM',{
+         flags:'a'
+     }),
+     fs.createWriteStream('./b3.webM',{
+         flags:'a'
+     }), fs.createWriteStream('./b4.webM',{
+             flags:'a'
+         })]*/
+    var count=0
+    socket.on('receiveBuffer',function(data){
+        var b=Buffer.from(data)
+        //console.log(b.toText())
+        /*var header={}
+        var bf=Buffer.from(data)
+        header['EBML']=Buffer.from(bf,4)*/
+        var b1=new Buffer(new Int8Array(b.buffer, 0,50));
+      /*  console.log('\n')
+        var b2=new Buffer(new Int8Array(b.buffer, 50,50));
+        var b3=new Buffer(new Int8Array(b.buffer, 100,50));
+        var b4=new Buffer(new Int8Array(b.buffer, 150,50));
+        var b5=new Buffer(new Int8Array(b.buffer, 200,50));
+        var b6= new Buffer(new Int8Array(b.buffer, 250,50));
+        var b7=new Buffer(new Int8Array(b.buffer, 300,50));
+        var b8=new Buffer(new Int8Array(b.buffer, 350,50));
+        console.log(b1)
+        console.log(b2)
+        console.log(b3)
+        console.log(b4)
+        console.log(b5)
+        console.log(b6)
+        console.log(b7)
+        console.log(b8)
+        console.log('--')
+        console.log(b1.readUInt8(0),b1.readUInt8(1),b1.readUInt8(2),b1.readUInt8(3))*/
+        if(b1.readUInt8(0)==26&&b1.readUInt8(1)==69&&b1.readUInt8(2)==223&&b1.readUInt8(3)==163){
+            videoHeader=new Buffer(new Int8Array(b.buffer, 0,189));
+            //console.log(videoHeader)
+            //console.log(videoHeader.readUInt8(188),videoHeader.readUInt8(187),videoHeader.readUInt8(186),videoHeader.readUInt8(185))
+        }
+        /*s[count].write(data)
+        count++*/
+        socket.broadcast.emit('videobuffer',[data,videoHeader])
+    })
 
     // when the client emits 'stop typing', we broadcast it to others
     socket.on('stop typing', function () {
@@ -162,14 +212,14 @@ io.on('connection', function (socket) {
     });
 
     socket.on('private message', function (data) {
-       /* console.log('I received a private message by ', data.from, ' say to ',data.to, data.message);*/
+        /* console.log('I received a private message by ', data.from, ' say to ',data.to, data.message);*/
         if(data.to in userClients){
             userClients[data.to].emit('receive private message',data);
         }
     });
 
     socket.on('video request', function (data) {
-     /*   console.log('I received a private message by ', data.from, ' say to ',data.to, '来自'+data.username+"的视频请求");*/
+        /*   console.log('I received a private message by ', data.from, ' say to ',data.to, '来自'+data.username+"的视频请求");*/
         if(data.to in userClients){
             data.message="收到了来自"+data.username+"的视频请求，是否接受？";
             userClients[data.to].emit('receive video',data);
@@ -177,7 +227,7 @@ io.on('connection', function (socket) {
     });
 
     socket.on('handle video request', function (data) {
-      /*  console.log('I received a private message by ', data.from, ' say to ',data.to,data.message);*/
+        /*  console.log('I received a private message by ', data.from, ' say to ',data.to,data.message);*/
         var operation=data.operation;
         if(data.to in userClients){
             if(operation=='accept'){
@@ -194,7 +244,7 @@ io.on('connection', function (socket) {
 
     //RTC PEER EVENT START
     socket.on('new_ice_caller_candidate', function (data) {
-       /* console.log('set caller candidate:'+data.from+"#"+JSON.stringify(data.candidate)+" to callee:"+data.to);*/
+        /* console.log('set caller candidate:'+data.from+"#"+JSON.stringify(data.candidate)+" to callee:"+data.to);*/
         if(data.to in userClients){
             userClients[data.to].emit('new_ice_candidate',data);
         }
@@ -207,38 +257,38 @@ io.on('connection', function (socket) {
     });
 
     socket.on('set_caller_description', function (data) {
-       /* console.log('set caller description:'+data.from+"#"+JSON.stringify(data.sdp)+" to callee:"+data.to);*/
+        /* console.log('set caller description:'+data.from+"#"+JSON.stringify(data.sdp)+" to callee:"+data.to);*/
         if(data.to in userClients){
             userClients[data.to].emit('set_description',data);
         }
     });
     socket.on('set_callee_description', function (data) {
-       /* console.log('set callee description:'+data.to+"#"+JSON.stringify(data.sdp)+" to caller:"+data.from);*/
+        /* console.log('set callee description:'+data.to+"#"+JSON.stringify(data.sdp)+" to caller:"+data.from);*/
         if(data.from in userClients){
             userClients[data.from].emit('set_description',data);
         }
     });
 
     socket.on('video started', function (data) {
-      /*  console.log('callee have started video');*/
+        /*  console.log('callee have started video');*/
         if(data.from in userClients){
             userClients[data.from].emit('callee have started video',data);
         }
     });
     socket.on('caller video start',function (data) {
-       /* console.log('caller have started video');*/
+        /* console.log('caller have started video');*/
         if(data.from in userClients){
             userClients[data.from].emit('caller have started video',data);
         }
     });
     socket.on('callee hangup',function(data){
-       /* console.log('callee have created peer');*/
+        /* console.log('callee have created peer');*/
         if(data.from in userClients){
             userClients[data.from].emit('hangup',data);
         }
     });
     socket.on('caller hangup',function(data){
-      /*  console.log('callee have created peer');*/
+        /*  console.log('callee have created peer');*/
         if(data.to in userClients){
             userClients[data.to].emit('hangup',data);
         }

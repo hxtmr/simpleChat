@@ -6,14 +6,23 @@
     "start": "node app.js"
   },
   "dependencies": {
-    "express": "~4.16.3",
     "body-parser": "~1.18.3",
     "cookie-parser": "~1.4.3",
-    "morgan": "~1.9.1",
-    "serve-favicon": "~2.5.0",
     "debug": "~4.0.1",
     "ejs": "~2.6.1",
+    "express": "~4.16.3",
+    "inherits": "^2.0.3",
+    "log4js": "^3.0.6",
+    "media-recorder-stream": "^2.1.1",
+    "mediastream-to-webm": "^1.0.1",
+    "morgan": "~1.9.1",
+    "readable-stream": "^3.0.6",
+    "save-buffer": "^1.1.0",
+    "serve-favicon": "~2.5.0",
+    "socket.io": "2.1.1",
+    "socket.io-stream": "^0.9.1",
     "uuid": "3.3.2",
-    "socket.io": "2.1.1"
+    "webm-byte-stream": "^0.1.4",
+    "webm-cluster-stream": "^1.0.0"
   }
 }

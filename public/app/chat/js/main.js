@@ -991,7 +991,9 @@ $(function () {
                 addToUserList(userList[p]);
             }
         }
-
+        if(initChatLive){
+            initChatLive()
+        }
         // console.log(p+':'+userList[p].token);
     });
 
