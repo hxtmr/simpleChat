@@ -44,7 +44,10 @@ var t3 = 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"'
 var catStream = null
 $(document).ready(function () {
 
-        navigator.mediaDevices.getUserMedia({video: true, audio: true})
+        navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: { width: 320, height: 240 }
+        })
             .then(function (stream) {
                 //console.log(stream,video.firstChild.srcObject=stream)
                 var video = $('#sv')[0]
@@ -81,7 +84,7 @@ $(document).ready(function () {
                         self.videoBuffers.push(buffer)
                         if (self.catchedBuffer.length >= 1) {
                             var mbuffer = _appendBuffer(self.catchedBuffer, buffer)
-                            catchedBuffer = []
+                            self.catchedBuffer = []
                             self.sourceBuffer.appendBuffer(mbuffer)
                         } else {
                             self.sourceBuffer.appendBuffer(buffer)
@@ -90,9 +93,9 @@ $(document).ready(function () {
                         console.log(e)
                         self.stop()
                     }
-
+                    self.catchedBuffer = []
                 } else {
-                    catchedBuffer.push(reader.result)
+                    self.catchedBuffer.push(reader.result)
                 }
             }
 

@@ -122,7 +122,7 @@ $(document).ready(function () {
                         nbuffer.appendBuffer(buffer)
                     // socket.emit('receiveBuffer' ,buffer);
                 }
-                catchedBuffer=[];
+                catchedBuffer=[]
             } catch (e) {
                 console.log(e)
             }
