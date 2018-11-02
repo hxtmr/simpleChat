@@ -2,6 +2,7 @@ var buffer = require('buffer')
 process.on('uncaughtException', function (err) {
     console.log('uncaughtException：' + err.stack);
 });
+var status='empty';
 var MAX_TIME = 999999999999
 var videoHeader = null;
 var firstCluster = null;
@@ -33,7 +34,8 @@ var privateKey = fs.readFileSync(path.join(__dirname, 'ssl/1539248837742.key'), 
 var certificate = fs.readFileSync(path.join(__dirname, 'ssl/1539248837742.pem'), 'utf8');
 var credentials = {key: privateKey, cert: certificate};
 var httpsServer = https.createServer(credentials, app);
-var io;
+var httpServer = http.createServer(app);
+var io,client_io;
 
 app.set('port', config.port || 443);
 app.set('host', config.host);
@@ -73,8 +75,12 @@ app.use(function (req, res, next) {
 });
 
 io = require('socket.io')(httpsServer);
+client_io=require('socket.io')(httpServer);
 httpsServer.listen(app.get('port'), function () {
     console.log('HTTPS Server is running on: https://localhost:%s', app.get('port'));
+});
+httpServer.listen(parseInt(app.get('port'))+1, function () {
+    console.log('HTTP Server is running on: http://localhost:%s', parseInt(app.get('port'))+1);
 });
 // web socket functions
 
@@ -82,6 +88,10 @@ httpsServer.listen(app.get('port'), function () {
 var usernames = {};
 var numUsers = 0;
 var userClients = {};
+client_io.on('connection', function (socket) {
+    console.log('a client joined')
+})
+var marstSocket=null;
 io.on('connection', function (socket) {
     var addedUser = false;
     socket.emit('videoHeader', videoHeader)
@@ -142,6 +152,7 @@ io.on('connection', function (socket) {
          })]*/
     var count = 0
     socket.on('receiveBuffer', function (data) {
+        status='busy'
         /*
          // 拷贝 `arr` 的内容
          const buf1 = Buffer.from(arr);
@@ -175,6 +186,11 @@ io.on('connection', function (socket) {
          console.log(b1.readUInt8(0),b1.readUInt8(1),b1.readUInt8(2),b1.readUInt8(3))*/
         if (headerTag.readUInt8(0) == 26 && headerTag.readUInt8(1) == 69 && headerTag.readUInt8(2) == 223 && headerTag.readUInt8(3) == 163) {
             videoHeader = bufferHeader//189视频头长度
+            marstSocket=socket;
+            marstSocket.on('disconnect',function () {
+                console.log('stop')
+                status='empty'
+            })
             //console.log(headerTag)
             //console.log(videoHeader.byteLength)
             //console.log(videoHeader)
@@ -183,12 +199,16 @@ io.on('connection', function (socket) {
         /*s[count].write(data)
         count++*/
         socket.broadcast.emit('videobuffer', [data, videoHeader])
+        client_io.emit('videobuffer', [data, videoHeader])
     })
     socket.on('pushStop', function (msg) {
         socket.broadcast.emit('stop', msg)
+        status='empty'
 
     })
-
+    socket.on('queryStatus', function (msg) {
+        socket.emit('statusChange',{status:status})
+    })
     // when the client emits 'stop typing', we broadcast it to others
     socket.on('stop typing', function () {
         socket.broadcast.emit('stop typing', {

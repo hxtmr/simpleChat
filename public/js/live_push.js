@@ -165,14 +165,22 @@ $(document).ready(function () {
                 startBtn = $('.startBtn'),
                 stopBtn = $('.stopBtn');
             startBtn.on('click', function () {
-                startBtn.attr('disabled',true)
-                stopBtn.attr('disabled',false)
-                recordObj.start(parseInt(interVal.val()))
+                socket.emit('queryStatus',interVal)
             })
             stopBtn.on('click', function () {
                 stopBtn.attr('disabled',true)
                 startBtn.attr('disabled',false)
                 recordObj.stop()
+            })
+            socket.on('statusChange',function (data) {
+                console.log(data);
+                if(data.status!='busy'){
+                    startBtn.attr('disabled',true)
+                    stopBtn.attr('disabled',false)
+                    recordObj.start(parseInt(interVal.val()))
+                }else{
+                    alert('别人正在直播，请你等一会儿吧！')
+                }
             })
 
         }
