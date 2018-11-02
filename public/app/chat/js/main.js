@@ -100,10 +100,8 @@ function stopStream(stream) {
         } catch(err){}
     }
 }
+var socket = io.connect();
 $(function () {
-    var socket = io({
-        transports: ['websocket']
-    });
     socket.on('connect',function () {
         console.log('connected')
     })

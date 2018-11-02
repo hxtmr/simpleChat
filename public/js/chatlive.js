@@ -66,7 +66,7 @@ function initChatLive() {
 
             });
         })
-        const socket =io.connect()
+       // const socket =io.connect()
 
         socket.on('connect',function () {
             console.log('connect')
