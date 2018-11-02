@@ -61,10 +61,14 @@ $(document).ready(function () {
         var self=this;
         this.socket=io.connect({transport:'websocket'})
         this.socket.on('disconnect',function () {
-            self.stop();
+            self.stop(function () {
+                self.start()
+            });
         })
         this.socket.on('stop',function () {
-            self.stop();
+            self.stop(function () {
+                self.start()
+            });
         })
         this.socket.on('connect',function () {
             self.start();
@@ -77,11 +81,12 @@ $(document).ready(function () {
         this.sourceBuffer = null;
         if (this.options.video) {
             var vo = this.options.video;
-            this.$video = $('<video muted autoplay></video>')
+            this.$video = $('<video muted autoplay controls></video>')
             this.$video.addClass(this.options.className || 'remote_video');
             this.video = this.$video[0]
             this.btn=$('<button>开启声音</button>')
-            $('body').append(this.btn).append('<br/>')
+            this.status=$('<span>直播未开始</span>')
+            $('body').append(this.btn).append(this.status).append('<br/>')
             document.body.appendChild(this.video)
             this.btn.on('click',function () {
                 self.video.muted=false;
@@ -140,7 +145,7 @@ $(document).ready(function () {
                 var promise = self.video.play();
                 if (promise !== undefined) {
                     promise.then(_ => {
-
+                        self.status.html('直播中')
                     }).catch(error => {
                         // console.log(error)
                     })
@@ -165,13 +170,22 @@ $(document).ready(function () {
             if (this.isStarted===true) {
                 this.stop()
             }
+            this.status.html('直播连接中')
             this.attachVideo(null)
         }
-        this.stop = function () {
+        this.stop = function (callback) {
             this.videoBuffers=[];
-            self.catchedBuffer=[]
+            this.catchedBuffer=[]
             this.video.muted=true;
+            this.video.currentTime=0;
             this.isStarted=false;
+            if(this.sourceBuffer){
+                this.sourceBuffer.hasAddHeader=false;
+            }
+            if(callback)
+                setTimeout(function () {
+                    callback()
+                },100)
         }
     }
     window.liveDecObj=new DecoderClass();

@@ -4,6 +4,14 @@
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
     <title><%=title%></title>
     <style type="text/css">
+        video{
+            -moz-transform: scaleX(-1);
+            -o-transform: scaleX(-1);
+            -webkit-transform: scaleX(-1);
+            transform: scaleX(-1);
+            filter: "FlipH";
+            -ms-filter: "FlipH";
+        }
         #sv{
             height: 40%;
         }
@@ -14,7 +22,7 @@
     </style>
 </head>
 <body>
- <video id="sv" autoplay>
+ <video id="sv" autoplay muted>
  </video>
 <div style="position: absolute;z-index: 9999999;left: 10px;bottom: 10px;">采集频率(min加载慢 max延迟大 单位毫秒)：
     <input type="text" value="200"  min='100' class="interval"/>

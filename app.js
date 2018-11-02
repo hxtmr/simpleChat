@@ -2,6 +2,7 @@ var buffer=require('buffer')
 process.on('uncaughtException', function(err) {
     console.log('uncaughtException：' + err.stack);
 });
+var MAX_TIME = 999999999999
 var videoHeader=null;
 var firstCluster=null;
 var http = require('http');
@@ -147,7 +148,7 @@ io.on('connection', function (socket) {
         var bf=Buffer.from(data)
         header['EBML']=Buffer.from(bf,4)*/
         var b1=new Buffer(new Int8Array(b.buffer, 0,50));
-      /*  console.log('\n')
+        //console.log('\n')
         var b2=new Buffer(new Int8Array(b.buffer, 50,50));
         var b3=new Buffer(new Int8Array(b.buffer, 100,50));
         var b4=new Buffer(new Int8Array(b.buffer, 150,50));
@@ -155,7 +156,7 @@ io.on('connection', function (socket) {
         var b6= new Buffer(new Int8Array(b.buffer, 250,50));
         var b7=new Buffer(new Int8Array(b.buffer, 300,50));
         var b8=new Buffer(new Int8Array(b.buffer, 350,50));
-        console.log(b1)
+       /* console.log(b1)
         console.log(b2)
         console.log(b3)
         console.log(b4)
@@ -173,6 +174,10 @@ io.on('connection', function (socket) {
         /*s[count].write(data)
         count++*/
         socket.broadcast.emit('videobuffer',[data,videoHeader])
+    })
+    socket.on('pushStop',function (msg) {
+        socket.broadcast.emit('stop',msg)
+
     })
 
     // when the client emits 'stop typing', we broadcast it to others
