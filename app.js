@@ -143,19 +143,16 @@ io.on('connection', function (socket) {
     var count=0
     socket.on('receiveBuffer',function(data){
         var b=Buffer.from(data)
-        //console.log(b.toText())
-        /*var header={}
-        var bf=Buffer.from(data)
-        header['EBML']=Buffer.from(bf,4)*/
-        var b1=new Buffer(new Int8Array(b.buffer, 0,50));
+        var headerTag=Buffer.from(new Int8Array(data.buffer, 0,4));
         //console.log('\n')
-        var b2=new Buffer(new Int8Array(b.buffer, 50,50));
+        //打印控制台分析视频流二进制格式
+     /*   var b2=new Buffer(new Int8Array(b.buffer, 50,50));
         var b3=new Buffer(new Int8Array(b.buffer, 100,50));
         var b4=new Buffer(new Int8Array(b.buffer, 150,50));
         var b5=new Buffer(new Int8Array(b.buffer, 200,50));
         var b6= new Buffer(new Int8Array(b.buffer, 250,50));
         var b7=new Buffer(new Int8Array(b.buffer, 300,50));
-        var b8=new Buffer(new Int8Array(b.buffer, 350,50));
+        var b8=new Buffer(new Int8Array(b.buffer, 350,50));*/
        /* console.log(b1)
         console.log(b2)
         console.log(b3)
@@ -166,8 +163,8 @@ io.on('connection', function (socket) {
         console.log(b8)
         console.log('--')
         console.log(b1.readUInt8(0),b1.readUInt8(1),b1.readUInt8(2),b1.readUInt8(3))*/
-        if(b1.readUInt8(0)==26&&b1.readUInt8(1)==69&&b1.readUInt8(2)==223&&b1.readUInt8(3)==163){
-            videoHeader=new Buffer(new Int8Array(b.buffer, 0,189));
+       if(headerTag.readUInt8(0)==26&&headerTag.readUInt8(1)==69&&headerTag.readUInt8(2)==223&&headerTag.readUInt8(3)==163){
+            videoHeader=Buffer.from(new Int8Array(data.buffer, 0,189));//189视频头长度
             //console.log(videoHeader)
             //console.log(videoHeader.readUInt8(188),videoHeader.readUInt8(187),videoHeader.readUInt8(186),videoHeader.readUInt8(185))
         }
