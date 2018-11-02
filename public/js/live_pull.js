@@ -1,6 +1,5 @@
 var MAX_TIME = 999999999999
 window.bufferEqual=function (b1,b2) {
-    window.hasEqual=true
     var len=Math.min(b1.byteLength,b2.byteLength,10000)
     var dv1 = new DataView(b1);
     var dv2 = new DataView(b2);
@@ -10,7 +9,6 @@ window.bufferEqual=function (b1,b2) {
     }
 
 }
-window.hasEqual=false;
 /**
  * Creates a new Uint8Array based on two different ArrayBuffers
  *
@@ -34,52 +32,12 @@ var _appendBuffer=window._appendBuffer = function(bufferArray, buffer2) {
     return tmp.buffer;
 };
 
-//multiStreamRecorder = new MultiStreamRecorder([stream, stream]);
-//mediaRecorder = new MediaStreamRecorder(stream);
 $(document).ready(function () {
-    var nV=$('<video class="live_video" muted autoplay style="border: 1px solid;"></video>')
-    $('body').append(nV)
-    $("#soundEnable").on('click',function () {
-        nV.removeAttr('muted')
-        nV[0].muted=false
-    })
-    var msource = new MediaSource();
-    var catchedBuffer = [];
-
-    nV[0].src = URL.createObjectURL(msource);
-    var nbuffer;
-    msource.addEventListener('sourceopen', function () {
-        nbuffer = msource.addSourceBuffer("video/webm;codecs=vp9,opus");
-        nbuffer.hasAddHeader=false;
-        //sourceBuffer.mode="sequence";
-        nbuffer.addEventListener('error', function (e) {
-            // console.log(e)
-        })
-        nbuffer.addEventListener('updateend', function (_) {
-            //console.log('end')
-            //source.endOfStream();
-            var promise = nV[0].play();
-            if (promise !== undefined) {
-                promise.then(_ => {
-
-                }).catch(error => {
-                })
-            };
-
-        });
-    })
-    const socket =io.connect()
-
-    socket.on('connect',function () {
-        console.log('connect')
-    })
-    window.videoBuffers=[]
-
-    function edgeBuffer(ber,hdata){
+    function edgeBuffer(ber,hdata,target){
         var tmp=new Uint8Array(ber.byteLength),clusterPos=-1;
         tmp.set(new Uint8Array(ber));
         if(tmp[0]==26&&tmp[1]==69&&tmp[2]==223&&tmp[3]==163){
-            nbuffer.hasAddHeader=true
+            target.sourceBuffer.hasAddHeader=true
             return ber;
         }
         for(var i=0;i<tmp.byteLength;i++){
@@ -93,45 +51,128 @@ $(document).ready(function () {
         var initSegBuffer=new Uint8Array(ber.byteLength-clusterPos)
         initSegBuffer.set(new Uint8Array(ber,clusterPos))
        // console.log(initSegBuffer)
-        nV[0].currentTime=MAX_TIME;
+        target.video.currentTime=MAX_TIME;
         initSegBuffer=_appendBuffer([hdata],initSegBuffer);
-        nbuffer.hasAddHeader=true
+        target.sourceBuffer.hasAddHeader=true
         //console.log(initSegBuffer)
         return initSegBuffer
     }
-
-
-    socket.on('videobuffer',function (data) {
-       // console.log(data)
-        var buffer=data[0]
-        if (nbuffer.updating !== true) {
-            try {
-                if (catchedBuffer.length >= 1) {
-                    var mbuffer=_appendBuffer(catchedBuffer,buffer)
-                    catchedBuffer=[]
-                    window.videoBuffers.push(mbuffer)
-                    if(nbuffer.hasAddHeader==false){
-                        mbuffer=edgeBuffer(mbuffer,data[1])
-                    }
-                    if(mbuffer)
-                        nbuffer.appendBuffer(mbuffer)
-                    //socket.emit('receiveBuffer' ,mbuffer);
-                }else{
-                    window.videoBuffers.push(buffer)
-                    if(nbuffer.hasAddHeader==false){
-                        buffer=edgeBuffer(buffer,data[1])
-                    }
-                    if(buffer)
-                        nbuffer.appendBuffer(buffer)
-                    // socket.emit('receiveBuffer' ,buffer);
-                }
-            } catch (e) {
-                console.log(e)
-            }
-
-        } else {
-            catchedBuffer.push(buffer)
+    window.DecoderClass = function (options) {
+        var self=this;
+        this.socket=io.connect({transport:'websocket'})
+        this.socket.on('disconnect',function () {
+            self.stop();
+        })
+        this.socket.on('stop',function () {
+            self.stop();
+        })
+        this.socket.on('connect',function () {
+            self.start();
+        })
+        this.isStarted = false;
+        this.videoBuffers = [];
+        this.catchedBuffer = [];
+        this.options = options || {video: {}, type: "video/webm;codecs=vp9,opus"}
+        this.mediaSource = new MediaSource();
+        this.sourceBuffer = null;
+        if (this.options.video) {
+            var vo = this.options.video;
+            this.$video = $('<video muted autoplay></video>')
+            this.$video.addClass(this.options.className || 'remote_video');
+            this.video = this.$video[0]
+            this.btn=$('<button>开启声音</button>')
+            $('body').append(this.btn).append('<br/>')
+            document.body.appendChild(this.video)
+            this.btn.on('click',function () {
+                self.video.muted=false;
+            })
         }
+        //private
+        var onBufferLoad = function (data) {
+            var buffer=data[0]
+            self.videoBuffers.push(buffer)
+            if (self.sourceBuffer.updating !== true) {
+                try {
+                    if (self.catchedBuffer.length >= 1) {
+                        var mbuffer=_appendBuffer(self.catchedBuffer,buffer)
+                        self.catchedBuffer = []
+                        if(self.sourceBuffer.hasAddHeader==false){
+                            mbuffer=edgeBuffer(mbuffer,data[1],self)
+                        }
+                        if(mbuffer)
+                            self.sourceBuffer.appendBuffer(mbuffer)
+                        //socket.emit('receiveBuffer' ,mbuffer);
+                    }else{
+                        if(self.sourceBuffer.hasAddHeader==false){
+                            buffer=edgeBuffer(buffer,data[1],self)
+                        }
+                        if(buffer)
+                            self.sourceBuffer.appendBuffer(buffer)
+                        // socket.emit('receiveBuffer' ,buffer);
+                    }
+                } catch (e) {
+                    console.log(e,'出错了，重新连接。。。')
+                    self.stop()
+                    if(self.sourceBuffer){
+                        self.sourceBuffer.hasAddHeader=false;
+                    }
+                    self.start();
+                }
 
-    })
+            } else {
+                self.catchedBuffer.push(buffer)
+            }
+        }
+        this.socket.on('videobuffer',function (data) {
+                onBufferLoad(data)
+        })
+
+        this.mediaSource.addEventListener('sourceopen', function () {
+            console.log('open')
+            self.sourceBuffer = self.mediaSource.addSourceBuffer(self.options.type);
+            //sourceBuffer.mode="sequence";
+            self.sourceBuffer.hasAddHeader=false;
+            self.sourceBuffer.addEventListener('error', function (e) {
+                // console.log(e)
+            })
+            self.sourceBuffer.addEventListener('updateend', function (_) {
+                //console.log('end')
+                var promise = self.video.play();
+                if (promise !== undefined) {
+                    promise.then(_ => {
+
+                    }).catch(error => {
+                        // console.log(error)
+                    })
+                    // Autoplay was prevented.
+                    // Show a "Play" button so that user can start playback.
+                }
+                ;
+                // console.log(source.readyState); // ended
+            });
+        })
+        this.attachVideo = function (callback) {
+            this.video.src = "";
+            this.video.srcObject = null;
+            this.video.currentTime = 0
+            this.video.src = URL.createObjectURL(this.mediaSource);
+            if (callback)
+                setTimeout(function () {
+                    callback()
+                }, 100)
+        }
+        this.start = function () {
+            if (this.isStarted===true) {
+                this.stop()
+            }
+            this.attachVideo(null)
+        }
+        this.stop = function () {
+            this.videoBuffers=[];
+            self.catchedBuffer=[]
+            this.video.muted=true;
+            this.isStarted=false;
+        }
+    }
+    window.liveDecObj=new DecoderClass();
 });

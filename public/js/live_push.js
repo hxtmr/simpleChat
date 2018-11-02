@@ -109,6 +109,7 @@ $(document).ready(function () {
             }
             this.mediaRecord.onstop = function (e) {
                 console.log('stop')
+                socket.emit('pushStop','stoped')
             }
             this.mediaSource.addEventListener('sourceopen', function () {
                 self.sourceBuffer = self.mediaSource.addSourceBuffer(self.options.type);

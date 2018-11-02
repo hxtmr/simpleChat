@@ -100,7 +100,9 @@ function stopStream(stream) {
         } catch(err){}
     }
 }
-var socket = io.connect();
+var socket = io.connect({
+    transport:['websocket']
+});
 $(function () {
     socket.on('connect',function () {
         console.log('connected')
@@ -194,7 +196,6 @@ $(function () {
     }
 
     function log_error(err) {
-        console.log(err);
         if (err.name == 'DevicesNotFoundError') {
             delete option[0].video;
             setup_video(option);
