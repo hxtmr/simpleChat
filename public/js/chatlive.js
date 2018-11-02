@@ -59,7 +59,8 @@ function initChatLive() {
                 var promise = nV[0].play();
                 if (promise !== undefined) {
                     promise.then(_ => {
-
+                        nV.removeAttr('muted')
+                        nV[0].muted=false
                     }).catch(error => {
                     })
                 };

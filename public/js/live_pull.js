@@ -37,9 +37,12 @@ var _appendBuffer=window._appendBuffer = function(bufferArray, buffer2) {
 //multiStreamRecorder = new MultiStreamRecorder([stream, stream]);
 //mediaRecorder = new MediaStreamRecorder(stream);
 $(document).ready(function () {
-    var nV=$('<video class="live_video" controls muted autoplay style="border: 1px solid;"></video>')
+    var nV=$('<video class="live_video" muted autoplay style="border: 1px solid;"></video>')
     $('body').append(nV)
-
+    $("#soundEnable").on('click',function () {
+        nV.removeAttr('muted')
+        nV[0].muted=false
+    })
     var msource = new MediaSource();
     var catchedBuffer = [];
 

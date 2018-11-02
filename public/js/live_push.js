@@ -43,7 +43,7 @@ var t3 = 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"'
 
 var catStream = null
 $(document).ready(function () {
-
+        console.log(navigator.mediaDevices.getSupportedConstraints())
         navigator.mediaDevices.getUserMedia({
             audio: true,
             video: true
