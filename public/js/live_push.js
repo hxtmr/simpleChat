@@ -41,35 +41,34 @@ var type = 'video/webm; codecs="vp9.0, vorbis"';
 var t2 = "video/webm;codecs=vp9,opus"
 var t3 = 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"'
 
-var catStream = null
+var catStream = null;
+var videoStream = null
 $(document).ready(function () {
-        console.log(navigator.mediaDevices.getSupportedConstraints())
+        //console.log(navigator.mediaDevices.getSupportedConstraints())
         navigator.mediaDevices.getUserMedia({
             audio: true,
             video: true
-        })
-            .then(function (stream) {
-                //console.log(stream,video.firstChild.srcObject=stream)
-                var video = $('#sv')[0]
-                video.srcObject = stream;
-                catStream = stream;//video.captureStream()
-                video.play();
-                doInit()
-            }).catch(function (error) {
+        }).then(function (stream) {
+            //console.log(stream,video.firstChild.srcObject=stream)
+            var video = $('#sv')[0]
+            video.srcObject = stream;
+            catStream = stream;//video.captureStream()
+            videoStream = video.captureStream()
+            video.play();
+            doInit()
+        }).catch(function (error) {
             console.log(error)
         })
-        window.RecordClass = function (options) {
+        window.RecordClass = function (options, downloadButton) {
             var self = this;
             this.started = false;
-            this.videoBuffers = [];
             this.catchedBuffer = [];
             this.options = options || {video: {}, type: "video/webm;codecs=vp9,opus"}
             this.mediaSource = new MediaSource();
             this.sourceBuffer = null;
-            this.videoBuffers = []
+            this.recordedBlobs = [];
             this.mediaRecord = new MediaRecorder(catStream, {mimeType: self.options.type});
             if (this.options.video) {
-                var vo = this.options.video;
                 this.$video = $('<video muted autoplay></video>')
                 this.$video.addClass(this.options.className || 'remote_video');
                 this.video = this.$video[0]
@@ -96,22 +95,18 @@ $(document).ready(function () {
                     self.catchedBuffer.push(reader.result)
                 }
             }
-
             this.mediaRecord.ondataavailable = function (e) {
                 var reader = new FileReader();
                 reader.onload = onBufferLoad;
                 socket.emit('receiveBuffer', e.data);
                 reader.readAsArrayBuffer(e.data);
-                self.videoBuffers.push(e.data)
             }
             this.mediaRecord.onstart = function (e) {
-                self.videoBuffers=[]
                 console.log('start')
             }
             this.mediaRecord.onstop = function (e) {
                 console.log('stop')
-                socket.emit('pushStop','stoped')
-
+                socket.emit('pushStop', 'stoped')
 
 
             }
@@ -148,66 +143,91 @@ $(document).ready(function () {
                         callback()
                     }, 100)
             }
+
+
+            //record
+            this.startRecording = function () {
+                var self = this;
+                this.recordedBlobs = [];
+
+                //private
+                function handleDataAvailable(event) {
+                    if (event.data && event.data.size > 0) {
+                        self.recordedBlobs.push(event.data);
+                    }
+                }
+
+                var options = {mimeType: this.options.type};
+                var recorder = this.recorder = new MediaRecorder(videoStream, options);
+                recorder.onstop = (event) => {
+                };
+                recorder.ondataavailable = handleDataAvailable;
+                recorder.start(10); // collect 10ms of data
+            }
+            this.stopRecording = function () {
+                this.recorder.stop();
+            }
+
             this.start = function (interval) {
-                if (this.isStarted===true) {
+                if (this.isStarted === true) {
                     this.stop()
                 }
-                this.videoBuffers=[];
                 this.attachVideo(function () {
                     self.mediaRecord.start(interval)
+                    self.startRecording()
                 })
             }
             this.stop = function () {
-                self.mediaRecord.stop()
+                this.mediaRecord.stop()
+                this.stopRecording()
                 //this.video.src=""
                 //this.mediaSource.removeSourceBuffer(this.sourceBuffer)
             }
         }
 
         function doInit() {
-            var recordObj=window.recordObj = new RecordClass();
             var interVal = $('.interval'),
                 startBtn = $('.startBtn'),
                 downBtn = $('.downBtn'),
                 stopBtn = $('.stopBtn');
+            var recordObj = window.recordObj = new RecordClass();
             startBtn.on('click', function () {
-                socket.emit('queryStatus',interVal)
+                socket.emit('queryStatus', interVal)
             })
             stopBtn.on('click', function () {
-                stopBtn.attr('disabled',true)
-                startBtn.attr('disabled',false)
-                downBtn.attr('disabled',false)
+                stopBtn.attr('disabled', true)
+                startBtn.attr('disabled', false)
+                downBtn.attr('disabled', false)
                 recordObj.stop()
             })
-            downBtn.on('click',function () {
-                if(recordObj.videoBuffers.length>0){
-                    var blob = new Blob(recordObj.videoBuffers, {type: recordObj.options.type});
+            downBtn.on('click', function () {
+                if (recordObj.recordedBlobs.length > 0) {
+                    var blob = new Blob(recordObj.recordedBlobs, {type: recordObj.options.type});
                     var url = window.URL.createObjectURL(blob);
                     var a = document.createElement('a');
                     a.style.display = 'none';
                     a.href = url;
-                    a.download = (new Date().getTime()+'.webm');
+                    a.download = (new Date().getTime() + '.webm');
                     document.body.appendChild(a);
                     a.click();
                     setTimeout(() => {
                         document.body.removeChild(a);
                         window.URL.revokeObjectURL(url);
                     }, 1000);
-                }else{
+                } else {
                     alert('没有可以下载的数据')
                 }
             })
-            socket.on('statusChange',function (data) {
-                if(data.status!='busy'){
-                    startBtn.attr('disabled',true)
-                    stopBtn.attr('disabled',false)
-                    downBtn.attr('disabled',true)
+            socket.on('statusChange', function (data) {
+                if (data.status != 'busy') {
+                    startBtn.attr('disabled', true)
+                    stopBtn.attr('disabled', false)
+                    downBtn.attr('disabled', true)
                     recordObj.start(parseInt(interVal.val()))
-                }else{
+                } else {
                     alert('别人正在直播，请你等一会儿吧！')
                 }
             })
-
         }
     }
 )
