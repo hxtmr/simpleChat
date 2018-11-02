@@ -148,6 +148,7 @@ $(document).ready(function () {
                 if (this.isStarted===true) {
                     this.stop()
                 }
+                this.videoBuffers=[];
                 this.attachVideo(function () {
                     self.mediaRecord.start(interval)
                 })
@@ -163,6 +164,7 @@ $(document).ready(function () {
             var recordObj=window.recordObj = new RecordClass();
             var interVal = $('.interval'),
                 startBtn = $('.startBtn'),
+                downBtn = $('.downBtn'),
                 stopBtn = $('.stopBtn');
             startBtn.on('click', function () {
                 socket.emit('queryStatus',interVal)
@@ -170,13 +172,33 @@ $(document).ready(function () {
             stopBtn.on('click', function () {
                 stopBtn.attr('disabled',true)
                 startBtn.attr('disabled',false)
+                downBtn.attr('disabled',false)
                 recordObj.stop()
+            })
+            downBtn.on('click',function () {
+                if(recordObj.videoBuffers.length>0){
+                    const blob = new Blob(recordObj.videoBuffers, {type: recordObj.options.type});
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = (new Date().getTime()+'.webm');
+                    document.body.appendChild(a);
+                    a.click();
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        window.URL.revokeObjectURL(url);
+                    }, 1000);
+                }else{
+                    alert('没有可以下载的数据')
+                }
             })
             socket.on('statusChange',function (data) {
                 console.log(data);
                 if(data.status!='busy'){
                     startBtn.attr('disabled',true)
                     stopBtn.attr('disabled',false)
+                    downBtn.attr('disabled',true)
                     recordObj.start(parseInt(interVal.val()))
                 }else{
                     alert('别人正在直播，请你等一会儿吧！')
