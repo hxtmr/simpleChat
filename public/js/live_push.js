@@ -81,7 +81,6 @@ $(document).ready(function () {
                 if (self.sourceBuffer.updating !== true) {
                     try {
                         var buffer = reader.result;
-                        self.videoBuffers.push(buffer)
                         if (self.catchedBuffer.length >= 1) {
                             var mbuffer = _appendBuffer(self.catchedBuffer, buffer)
                             self.catchedBuffer = []
@@ -103,13 +102,18 @@ $(document).ready(function () {
                 reader.onload = onBufferLoad;
                 socket.emit('receiveBuffer', e.data);
                 reader.readAsArrayBuffer(e.data);
+                self.videoBuffers.push(e.data)
             }
             this.mediaRecord.onstart = function (e) {
+                self.videoBuffers=[]
                 console.log('start')
             }
             this.mediaRecord.onstop = function (e) {
                 console.log('stop')
                 socket.emit('pushStop','stoped')
+
+
+
             }
             this.mediaSource.addEventListener('sourceopen', function () {
                 self.sourceBuffer = self.mediaSource.addSourceBuffer(self.options.type);
@@ -177,9 +181,9 @@ $(document).ready(function () {
             })
             downBtn.on('click',function () {
                 if(recordObj.videoBuffers.length>0){
-                    const blob = new Blob(recordObj.videoBuffers, {type: recordObj.options.type});
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
+                    var blob = new Blob(recordObj.videoBuffers, {type: recordObj.options.type});
+                    var url = window.URL.createObjectURL(blob);
+                    var a = document.createElement('a');
                     a.style.display = 'none';
                     a.href = url;
                     a.download = (new Date().getTime()+'.webm');
@@ -194,7 +198,6 @@ $(document).ready(function () {
                 }
             })
             socket.on('statusChange',function (data) {
-                console.log(data);
                 if(data.status!='busy'){
                     startBtn.attr('disabled',true)
                     stopBtn.attr('disabled',false)

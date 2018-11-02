@@ -188,7 +188,7 @@ io.on('connection', function (socket) {
             videoHeader = bufferHeader//189视频头长度
             marstSocket=socket;
             marstSocket.on('disconnect',function () {
-                console.log('stop')
+                console.log('status has changed')
                 status='empty'
             })
             //console.log(headerTag)
