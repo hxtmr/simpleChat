@@ -152,7 +152,6 @@ io.on('connection', function (socket) {
          })]*/
     var count = 0
     socket.on('receiveBuffer', function (data) {
-        status='busy'
         /*
          // 拷贝 `arr` 的内容
          const buf1 = Buffer.from(arr);
@@ -185,13 +184,14 @@ io.on('connection', function (socket) {
          console.log('--')
          console.log(b1.readUInt8(0),b1.readUInt8(1),b1.readUInt8(2),b1.readUInt8(3))*/
         if (headerTag.readUInt8(0) == 26 && headerTag.readUInt8(1) == 69 && headerTag.readUInt8(2) == 223 && headerTag.readUInt8(3) == 163) {
+            status='busy'
             videoHeader = bufferHeader//189视频头长度
             marstSocket=socket;
             marstSocket.on('disconnect',function () {
                 console.log('status has changed')
                 status='empty'
                 socket.broadcast.emit('stop', '')
-                client_io.broadcast.emit('stop', '')
+                client_io.emit('stop', '')
             })
             //console.log(headerTag)
             //console.log(videoHeader.byteLength)
@@ -205,6 +205,7 @@ io.on('connection', function (socket) {
     })
     socket.on('pushStop', function (msg) {
         socket.broadcast.emit('stop', msg)
+        client_io.emit('stop',msg)
         status='empty'
 
     })

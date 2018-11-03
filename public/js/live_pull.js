@@ -70,6 +70,7 @@ $(document).ready(function () {
             });
         })
         this.socket.on('stop',function () {
+            console.log('stop')
             self.stop(function () {
                 self.start()
             });
