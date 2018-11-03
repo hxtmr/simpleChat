@@ -39,15 +39,14 @@ var t2 = "video/webm;codecs=vp9,opus"
 var t3 = 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"'
 
 var catStream = null;
-var videoStream = null
 $(document).ready(function () {
-    //multiStreamRecorder = new MultiStreamRecorder([stream, stream]);
-    if ('mediaDevices'in navigator && 'MediaSource' in window && MediaSource.isTypeSupported('video/webm;codecs=vp9')) {
-    } else {
-        alert('浏览器不支持MSE API,或者不支持vp9视频编码，推荐使用最新的Chrome或者firefox');
-    }
+        //multiStreamRecorder = new MultiStreamRecorder([stream, stream]);
+        if ('mediaDevices'in navigator && 'MediaSource' in window && MediaSource.isTypeSupported('video/webm;codecs=vp9')) {
+        } else {
+            alert('浏览器不支持MSE API,或者不支持vp9视频编码，推荐使用最新的Chrome或者firefox');
+        }
 
-    //console.log(navigator.mediaDevices.getSupportedConstraints())
+        //console.log(navigator.mediaDevices.getSupportedConstraints())
         navigator.mediaDevices.getUserMedia({
             audio: true,
             video: true
@@ -56,7 +55,6 @@ $(document).ready(function () {
             var video = $('#sv')[0]
             video.srcObject = stream;
             catStream = stream;//video.captureStream()
-            videoStream = video.captureStream()
             video.play();
             doInit()
         }).catch(function (error) {
@@ -99,6 +97,7 @@ $(document).ready(function () {
                 }
             }
             this.mediaRecord.ondataavailable = function (e) {
+                self.recordedBlobs.push(e.data);
                 var reader = new FileReader();
                 reader.onload = onBufferLoad;
                 socket.emit('receiveBuffer', e.data);
@@ -146,43 +145,17 @@ $(document).ready(function () {
                         callback()
                     }, 100)
             }
-
-
-            //record
-            this.startRecording = function () {
-                var self = this;
-                this.recordedBlobs = [];
-
-                //private
-                function handleDataAvailable(event) {
-                    if (event.data && event.data.size > 0) {
-                        self.recordedBlobs.push(event.data);
-                    }
-                }
-
-                var options = {mimeType: this.options.type};
-                var recorder = this.recorder = new MediaRecorder(videoStream, options);
-                recorder.onstop = (event) => {
-                };
-                recorder.ondataavailable = handleDataAvailable;
-                recorder.start(10); // collect 10ms of data
-            }
-            this.stopRecording = function () {
-                this.recorder.stop();
-            }
-
             this.start = function (interval) {
                 if (this.isStarted === true) {
                     this.stop()
                 }
                 this.attachVideo(function () {
+                    self.recordedBlobs=[];
                     self.mediaRecord.start(interval)
-                    self.startRecording()
                 })
             }
             this.stop = function () {
                 this.mediaRecord.stop()
-                this.stopRecording()
                 //this.video.src=""
                 //this.mediaSource.removeSourceBuffer(this.sourceBuffer)
             }
