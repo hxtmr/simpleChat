@@ -190,6 +190,8 @@ io.on('connection', function (socket) {
             marstSocket.on('disconnect',function () {
                 console.log('status has changed')
                 status='empty'
+                socket.broadcast.emit('stop', '')
+                client_io.broadcast.emit('stop', '')
             })
             //console.log(headerTag)
             //console.log(videoHeader.byteLength)
