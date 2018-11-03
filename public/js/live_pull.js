@@ -32,6 +32,10 @@ var _appendBuffer=window._appendBuffer = function(bufferArray, buffer2) {
     return tmp.buffer;
 };
 
+if ('MediaSource' in window && MediaSource.isTypeSupported('video/webm;codecs=vp9')) {
+} else {
+    alert('浏览器不支持MSE API,或者不支持vp9视频编码，推荐使用最新的Chrome或者firefox');
+}
 $(document).ready(function () {
     function edgeBuffer(ber,hdata,target){
         var tmp=new Uint8Array(ber.byteLength),clusterPos=-1;

@@ -36,6 +36,10 @@ var socket = io.connect()
 
 
 //multiStreamRecorder = new MultiStreamRecorder([stream, stream]);
+if ('MediaSource' in window && MediaSource.isTypeSupported('video/webm;codecs=vp9')) {
+} else {
+    alert('浏览器不支持MSE API,或者不支持vp9视频编码，推荐使用最新的Chrome或者firefox');
+}
 
 var type = 'video/webm; codecs="vp9.0, vorbis"';
 var t2 = "video/webm;codecs=vp9,opus"
