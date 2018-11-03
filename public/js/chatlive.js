@@ -81,10 +81,10 @@ function initChatLive() {
             this.mediaSource = new MediaSource();
             this.sourceBuffer = null;
             if (this.options.video) {
-                this.$video = $('<video muted  controls autoplay style="width:40%;max-width:320px;position: absolute;top: 0px;right: 153px;z-index:9999999;"></video>')
+                this.$video = $('<video muted  autoplay style="width:40%;max-width:320px;position: absolute;top: 0px;right: 153px;z-index:9999999;"></video>')
                 this.$video.addClass(this.options.className || 'remote_video');
                 this.video = this.$video[0]
-                this.btn=$('<button>开启声音</button>')
+                this.btn=$('<button style="position: absolute;right:180px;top:0px;display:none;z-index: 99999999">开启声音</button>')
                 this.status=$('<span>直播未开始</span>')
                 $('body').append(this.btn).append(this.status).append('<br/>')
                 document.body.appendChild(this.video)
@@ -146,6 +146,7 @@ function initChatLive() {
                     if (promise !== undefined) {
                         promise.then(_ => {
                             self.status.html('直播中')
+                            self.btn.show();
                         }).catch(error => {
                             // console.log(error)
                         })
@@ -174,6 +175,7 @@ function initChatLive() {
                 this.attachVideo(null)
             }
             this.stop = function (callback) {
+                this.btn.hide()
                 this.videoBuffers=[];
                 this.catchedBuffer=[]
                 this.video.muted=true;

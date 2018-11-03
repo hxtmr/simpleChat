@@ -81,10 +81,10 @@ $(document).ready(function () {
         this.sourceBuffer = null;
         if (this.options.video) {
             var vo = this.options.video;
-            this.$video = $('<video muted autoplay controls></video>')
+            this.$video = $('<video muted autoplay <!--controls-->></video>')
             this.$video.addClass(this.options.className || 'remote_video');
             this.video = this.$video[0]
-            this.btn=$('<button>开启声音</button>')
+            this.btn=$('<button style="display: none">开启声音</button>')
             this.status=$('<span>直播未开始</span>')
             $('body').append(this.btn).append(this.status).append('<br/>')
             document.body.appendChild(this.video)
@@ -146,6 +146,7 @@ $(document).ready(function () {
                 if (promise !== undefined) {
                     promise.then(_ => {
                         self.status.html('直播中')
+                        self.btn.show()
                     }).catch(error => {
                         // console.log(error)
                     })
@@ -174,6 +175,7 @@ $(document).ready(function () {
             this.attachVideo(null)
         }
         this.stop = function (callback) {
+            this.btn.hide()
             this.videoBuffers=[];
             this.catchedBuffer=[]
             this.video.muted=true;
