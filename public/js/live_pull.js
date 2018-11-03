@@ -134,6 +134,7 @@ $(document).ready(function () {
             }
         }
         this.socket.on('videobuffer',function (data) {
+            if(self.sourceBuffer)
                 onBufferLoad(data)
         })
 
