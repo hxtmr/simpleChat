@@ -34,13 +34,6 @@ var _appendBuffer = window._appendBuffer = function (bufferArray, buffer2) {
 
 var socket = io.connect()
 
-
-//multiStreamRecorder = new MultiStreamRecorder([stream, stream]);
-if ('MediaSource' in window && MediaSource.isTypeSupported('video/webm;codecs=vp9')) {
-} else {
-    alert('浏览器不支持MSE API,或者不支持vp9视频编码，推荐使用最新的Chrome或者firefox');
-}
-
 var type = 'video/webm; codecs="vp9.0, vorbis"';
 var t2 = "video/webm;codecs=vp9,opus"
 var t3 = 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"'
@@ -48,7 +41,13 @@ var t3 = 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"'
 var catStream = null;
 var videoStream = null
 $(document).ready(function () {
-        //console.log(navigator.mediaDevices.getSupportedConstraints())
+    //multiStreamRecorder = new MultiStreamRecorder([stream, stream]);
+    if ('mediaDevices'in navigator && 'MediaSource' in window && MediaSource.isTypeSupported('video/webm;codecs=vp9')) {
+    } else {
+        alert('浏览器不支持MSE API,或者不支持vp9视频编码，推荐使用最新的Chrome或者firefox');
+    }
+
+    //console.log(navigator.mediaDevices.getSupportedConstraints())
         navigator.mediaDevices.getUserMedia({
             audio: true,
             video: true
