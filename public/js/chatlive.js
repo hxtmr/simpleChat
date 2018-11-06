@@ -1,11 +1,11 @@
 function initChatLive() {
     var MAX_TIME = 999999999999
-    window.bufferEqual = function (b1, b2) {
-        var len = Math.min(b1.byteLength, b2.byteLength, 10000)
+    window.bufferEqual=function (b1,b2) {
+        var len=Math.min(b1.byteLength,b2.byteLength,10000)
         var dv1 = new DataView(b1);
         var dv2 = new DataView(b2);
-        for (var i = 0; i < len; i++) {
-            console.log('index:', i, dv1.getUint8(i), dv2.getUint8(i), dv1.getUint8(i) == dv2.getUint8(i))
+        for(var i=0;i<len;i++){
+            console.log('index:',i,dv1.getUint8(i),dv2.getUint8(i),dv1.getUint8(i)==dv2.getUint8(i))
 
         }
 
@@ -18,61 +18,66 @@ function initChatLive() {
      * @param {ArrayBuffers} buffer2 The second buffer.
      * @return {ArrayBuffers} The new ArrayBuffer created out of the two.
      */
-    var _appendBuffer = window._appendBuffer = function (bufferArray, buffer2) {
+    var _appendBuffer=window._appendBuffer = function(bufferArray, buffer2) {
         bufferArray.push(buffer2)
-        var count = bufferArray.length;
-        var buffLen = 0, offset = 0;
-        for (var i = 0; i < count; i++) {
-            buffLen += bufferArray[i].byteLength
+        var count=bufferArray.length;
+        var buffLen=0,offset=0;
+        for(var i=0;i<count;i++){
+            buffLen+=bufferArray[i].byteLength
         }
         var tmp = new Uint8Array(buffLen);
-        for (var i = 0; i < count; i++) {
+        for(var i=0;i<count;i++){
             tmp.set(new Uint8Array(bufferArray[i]), offset);
-            offset += bufferArray[i].byteLength;
+            offset+=bufferArray[i].byteLength;
         }
         return tmp.buffer;
     };
-
+    /*alert(MediaSource.isTypeSupported('video/mp4; codecs="avc1.42E01E, mp4a.40.2"'))
+    alert(MediaSource.isTypeSupported('video/webm;codecs=vp9'))*/
+    if ('MediaSource' in window && MediaSource.isTypeSupported('video/webm;codecs=vp9')) {
+    } else {
+        alert('浏览器不支持MSE API,或者不支持vp9视频编码，推荐使用最新的Chrome或者firefox');
+    }
     $(document).ready(function () {
-        function edgeBuffer(ber, hdata, target) {
-            var tmp = new Uint8Array(ber.byteLength), clusterPos = -1;
+        function edgeBuffer(ber,hdata,target){
+            var tmp=new Uint8Array(ber.byteLength),clusterPos=-1;
             tmp.set(new Uint8Array(ber));
-            if (tmp[0] == 26 && tmp[1] == 69 && tmp[2] == 223 && tmp[3] == 163) {
-                target.sourceBuffer.hasAddHeader = true
+            if(tmp[0]==26&&tmp[1]==69&&tmp[2]==223&&tmp[3]==163){
+                target.sourceBuffer.hasAddHeader=true
                 return ber;
             }
-            for (var i = 0; i < tmp.byteLength; i++) {
-                if (tmp[i] == 31 && tmp[i + 1] == 67 && tmp[i + 2] == 182 && tmp[i + 3] == 117) {
-                    clusterPos = i;
+            for(var i=0;i<tmp.byteLength;i++){
+                if(tmp[i]==31&&tmp[i+1]==67&&tmp[i+2]==182&&tmp[i+3]==117){
+                    clusterPos=i;
                     break;
                 }
             }
-            if (clusterPos == -1) return null;
+            if(clusterPos==-1)return null;
             // console.log(123,clusterPos)
-            var initSegBuffer = new Uint8Array(ber.byteLength - clusterPos)
-            initSegBuffer.set(new Uint8Array(ber, clusterPos))
+            var initSegBuffer=new Uint8Array(ber.byteLength-clusterPos)
+            initSegBuffer.set(new Uint8Array(ber,clusterPos))
             // console.log(initSegBuffer)
-            target.video.currentTime = MAX_TIME;
-            initSegBuffer = _appendBuffer([hdata], initSegBuffer);
-            target.sourceBuffer.hasAddHeader = true
+            target.video.currentTime=MAX_TIME;
+            initSegBuffer=_appendBuffer([hdata],initSegBuffer);
+            target.sourceBuffer.hasAddHeader=true
             //console.log(initSegBuffer)
             return initSegBuffer
         }
-
         window.DecoderClass = function (options) {
-            var self = this;
-            this.socket = io.connect({transport: 'websocket'})
-            this.socket.on('disconnect', function () {
+            var self=this;
+            this.socket=io.connect({transport:'websocket'})
+            this.socket.on('disconnect',function () {
                 self.stop(function () {
                     self.start()
                 });
             })
-            this.socket.on('stop', function () {
+            this.socket.on('stop',function () {
+                console.log('stop')
                 self.stop(function () {
                     self.start()
                 });
             })
-            this.socket.on('connect', function () {
+            this.socket.on('connect',function () {
                 self.start();
             })
             this.isStarted = false;
@@ -95,32 +100,32 @@ function initChatLive() {
             }
             //private
             var onBufferLoad = function (data) {
-                var buffer = data[0]
-                self.videoBuffers.push(buffer)
+                var buffer=data[0]
+                //self.videoBuffers.push(buffer)
                 if (self.sourceBuffer.updating !== true) {
                     try {
                         if (self.catchedBuffer.length >= 1) {
-                            var mbuffer = _appendBuffer(self.catchedBuffer, buffer)
+                            var mbuffer=_appendBuffer(self.catchedBuffer,buffer)
                             self.catchedBuffer = []
-                            if (self.sourceBuffer.hasAddHeader == false) {
-                                mbuffer = edgeBuffer(mbuffer, data[1], self)
+                            if(self.sourceBuffer.hasAddHeader==false){
+                                mbuffer=edgeBuffer(mbuffer,data[1],self)
                             }
-                            if (mbuffer)
+                            if(mbuffer)
                                 self.sourceBuffer.appendBuffer(mbuffer)
                             //socket.emit('receiveBuffer' ,mbuffer);
-                        } else {
-                            if (self.sourceBuffer.hasAddHeader == false) {
-                                buffer = edgeBuffer(buffer, data[1], self)
+                        }else{
+                            if(self.sourceBuffer.hasAddHeader==false){
+                                buffer=edgeBuffer(buffer,data[1],self)
                             }
-                            if (buffer)
+                            if(buffer)
                                 self.sourceBuffer.appendBuffer(buffer)
                             // socket.emit('receiveBuffer' ,buffer);
                         }
                     } catch (e) {
-                        console.log(e, '出错了，重新连接。。。')
+                        console.log(e,'出错了，重新连接。。。')
                         self.stop()
-                        if (self.sourceBuffer) {
-                            self.sourceBuffer.hasAddHeader = false;
+                        if(self.sourceBuffer){
+                            self.sourceBuffer.hasAddHeader=false;
                         }
                         self.start();
                     }
@@ -129,8 +134,8 @@ function initChatLive() {
                     self.catchedBuffer.push(buffer)
                 }
             }
-            this.socket.on('videobuffer', function (data) {
-                if (self.sourceBuffer)
+            this.socket.on('videobuffer',function (data) {
+                if(self.sourceBuffer)
                     onBufferLoad(data)
             })
 
@@ -138,7 +143,7 @@ function initChatLive() {
                 console.log('open')
                 self.sourceBuffer = self.mediaSource.addSourceBuffer(self.options.type);
                 //sourceBuffer.mode="sequence";
-                self.sourceBuffer.hasAddHeader = false;
+                self.sourceBuffer.hasAddHeader=false;
                 self.sourceBuffer.addEventListener('error', function (e) {
                     // console.log(e)
                 })
@@ -148,7 +153,7 @@ function initChatLive() {
                     if (promise !== undefined) {
                         promise.then(_ => {
                             self.status.html('直播中')
-                            self.btn.show();
+                            self.btn.show()
                         }).catch(error => {
                             // console.log(error)
                         })
@@ -170,7 +175,7 @@ function initChatLive() {
                     }, 100)
             }
             this.start = function () {
-                if (this.isStarted === true) {
+                if (this.isStarted===true) {
                     this.stop()
                 }
                 this.status.html('直播连接中')
@@ -178,19 +183,20 @@ function initChatLive() {
             }
             this.stop = function (callback) {
                 this.btn.hide()
-                this.videoBuffers = [];
-                this.catchedBuffer = []
-                this.video.muted = true;
-                this.isStarted = false;
-                if (this.sourceBuffer) {
-                    this.sourceBuffer.hasAddHeader = false;
+                this.videoBuffers=[];
+                this.catchedBuffer=[]
+                this.video.muted=true;
+                this.video.currentTime=0;
+                this.isStarted=false;
+                if(this.sourceBuffer){
+                    this.sourceBuffer.hasAddHeader=false;
                 }
-                if (callback)
+                if(callback)
                     setTimeout(function () {
                         callback()
-                    }, 100)
+                    },100)
             }
         }
-        window.liveDecObj = new DecoderClass();
+        window.liveDecObj=new DecoderClass();
     });
 }

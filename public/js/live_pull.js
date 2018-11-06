@@ -31,7 +31,8 @@ var _appendBuffer=window._appendBuffer = function(bufferArray, buffer2) {
     }
     return tmp.buffer;
 };
-
+/*alert(MediaSource.isTypeSupported('video/mp4; codecs="avc1.42E01E, mp4a.40.2"'))
+alert(MediaSource.isTypeSupported('video/webm;codecs=vp9'))*/
 if ('MediaSource' in window && MediaSource.isTypeSupported('video/webm;codecs=vp9')) {
 } else {
     alert('浏览器不支持MSE API,或者不支持vp9视频编码，推荐使用最新的Chrome或者firefox');
@@ -100,7 +101,7 @@ $(document).ready(function () {
         //private
         var onBufferLoad = function (data) {
             var buffer=data[0]
-            self.videoBuffers.push(buffer)
+            //self.videoBuffers.push(buffer)
             if (self.sourceBuffer.updating !== true) {
                 try {
                     if (self.catchedBuffer.length >= 1) {
