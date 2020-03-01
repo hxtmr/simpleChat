@@ -157,8 +157,8 @@ $(function () {
             iceCandidate = mozRTCIceCandidate;
         }
     }
-    get_user_media = navigator.getUserMedia.bind(navigator);
     if (navigator.getUserMedia) {
+        get_user_media = navigator.getUserMedia.bind(navigator);
         connect_stream_to_src = function (media_stream, $media_element) {
             var srcObject = '';
             var media_element = $media_element.get(0);
