@@ -160,9 +160,7 @@ $(function () {
     if (navigator.getUserMedia) {
         get_user_media = navigator.getUserMedia.bind(navigator);
         connect_stream_to_src = function (media_stream, $media_element) {
-            var srcObject = '';
-            var media_element = $media_element.get(0);
-            media_element.srcObject= media_stream;
+            media_element.srcObject = media_stream;           
             if ($media_element.hasClass('local_video')) {
                 media_element.volume = 0;
             } else {
