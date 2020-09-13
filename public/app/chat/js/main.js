@@ -169,11 +169,7 @@ $(function () {
             } else {
                 srcObject = 'src';
             }
-            if (window.URL) {
-                media_element.src = window.URL.createObjectURL(media_stream);
-            } else {
-                media_element[srcObject] = media_stream;
-            }
+            media_element[srcObject] = media_stream;
             if ($media_element.hasClass('local_video')) {
                 media_element.volume = 0;
             } else {
